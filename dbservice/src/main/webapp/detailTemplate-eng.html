@@ -1,0 +1,78 @@
+<div id="detailTemplate">
+<h4>Unit details:
+    <tpl for="unit">
+    <a href="/maplog/admin/index.php?action=unit_view&id={unitId}" title="Unit administration ->">{description} ({unitId})</a>
+    </tpl>
+</h4>
+<dl>
+    <tpl for="holder">
+        <dd>Company:</dd><dt>{holderName} &nbsp;</dt>
+        <dd>Voice phone: </dd> <dt>{phone} &nbsp;</dt>
+    </tpl>
+    <tpl for="generalInfo"> <tpl for="properties">
+            <dd>Reg No.: </dd> <dt>{spz} &nbsp;</dt>
+            <dd>Type: </dd> <dt>{typ} &nbsp;</dt>
+            <dd>Model: </dd> <dt>{model} &nbsp;</dt>
+    </tpl></tpl>
+    <tpl for="position">
+        <dd>Speed: </dd> <dt>{speed} km/h &nbsp;</dt>
+        <dd>Last position: </dd> <dt>{time_stamp} {xwgs84},{ywgs84} &nbsp;</dt>
+    </tpl>
+    <dd>Is moving: </dd>
+    <tpl if="is_moving == 'true'">
+        <dt>Moving &nbsp;</dt>
+    </tpl>
+    <tpl if="is_moving == 'false'">
+        <dt>Standing &nbsp;</dt>
+    </tpl>
+    <dd>Ignition: </dd>
+    <tpl if="ignition_on == 'true'">
+        <dt>ON &nbsp;</dt>
+    </tpl>
+    <tpl if="ignition_on == 'false'">
+        <dt>OFF &nbsp;</dt>
+    </tpl>
+    <dd>Is online: </dd>
+    <tpl if="is_online == 'true'">
+        <dt>Online &nbsp;</dt>
+    </tpl>
+    <tpl if="is_online == 'false'">
+        <dt>Offline &nbsp;</dt>
+    </tpl>
+</dl>
+<tpl for="attributes">
+    <tpl if="has_rfid == 'true'">
+        <h4>Device:</h4>
+        <ul>
+            <li><dl>
+                <dd>RFID: </dd><dt>{rfid_value} &nbsp;</dt>
+            </dl></li>
+            <li><dl>
+                <dd>Description: </dd><dt>{rfid_desc} &nbsp;</dt>
+            </dl></li>
+       </ul>
+    </tpl>
+</tpl>
+<h4>Drivers:</h4>
+<ul>
+    <tpl for="drivers">
+        <li><dl>
+                <dd>Name: </dd><dt>{title} {fname} {lname} &nbsp;</dt>
+                <dd>Voice phone: </dd><dt>{phone} &nbsp;</dt>
+        </dl></li>
+    </tpl>
+</ul>
+<h4>Alerts:</h4>
+<dl>
+<tpl for="alertEvents">
+    <tpl if="solving == false">
+        <dd>{timeStamp}</dd><dt><tpl for="alert">{description}</tpl> <input type="button" onclick="MapLog.UnitFeature.solveAlert({alertEventId},this);" value="Solve" id="{alertEventId}_button" /> </dt>
+    </tpl>
+</tpl>
+<tpl for="alertEvents">
+    <tpl if="solving == true">
+        <dd>{timeStamp}</dd><dt><tpl for="alert">{description}</tpl> Solved </dt>
+    </tpl>
+</tpl>
+</dl>
+</div>

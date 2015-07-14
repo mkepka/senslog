@@ -1,0 +1,80 @@
+<div id="detailTemplate">
+<h4>Údaje o jednotce:
+    <tpl for="unit">
+    <a href="/maplog/admin/index.php?action=unit_view&id={unitId}" title="Adminstrace jednotky ->">{description} ({unitId})</a>
+    </tpl>
+</h4>
+<dl>
+    <tpl for="holder">
+        <dd>Firma:</dd><dt>{holderName} &nbsp;</dt>
+        <dd>Telefon: </dd> <dt>{phone} &nbsp;</dt>
+    </tpl>
+    <tpl for="generalInfo"> <tpl for="properties">
+            <dd>SPZ: </dd> <dt>{spz} &nbsp;</dt>
+            <dd>Typ: </dd> <dt>{typ} &nbsp;</dt>
+            <dd>Model: </dd> <dt>{model} &nbsp;</dt>
+    </tpl></tpl>
+    <tpl for="position">
+        <dd>Rychlost: </dd> <dt>{speed} km/h &nbsp;</dt>
+        <dd>Poslední pozice: </dd> <dt>{time_stamp} {xwgs84},{ywgs84} &nbsp;</dt>
+    </tpl>
+    <dd>Pohyb: </dd>
+    <tpl if="is_moving == 'true'">
+        <dt>Pohybuje se &nbsp;</dt>
+    </tpl>
+    <tpl if="is_moving == 'false'">
+        <dt>Stojí &nbsp;</dt>
+    </tpl>
+    <dd>Klíček: </dd>
+    <tpl if="ignition_on == 'true'">
+        <dt>Zapnuto &nbsp;</dt>
+    </tpl>
+    <tpl if="ignition_on == 'false'">
+        <dt>Vypnuto &nbsp;</dt>
+    </tpl>
+    <dd>Sledování ve vozidle: </dd>
+    <tpl if="is_online == 'true'">
+        <dt>Zapnuto &nbsp;</dt>
+    </tpl>
+    <tpl if="is_online == 'false'">
+        <dt>Vypnuto &nbsp;</dt>
+    </tpl>
+</dl>
+
+<tpl for="attributes">
+    <tpl if="has_rfid == 'true'">
+        <h4>Připojené zařízení:</h4>
+        <ul>
+            <li><dl>
+                <dd>RFID: </dd><dt>{rfid_value} &nbsp;</dt>
+            </dl></li>
+                        <li><dl>
+                <dd>Popis: </dd><dt>{rfid_desc} &nbsp;</dt>
+            </dl></li>
+       </ul>
+    </tpl>
+</tpl>
+
+<h4>Řidiči:</h4>
+<ul>
+    <tpl for="drivers">
+        <li><dl>
+                <dd>Jméno: </dd><dt>{title} {fname} {lname} &nbsp;</dt>
+                <dd>Telefon: </dd><dt>{phone} &nbsp;</dt>
+        </dl></li>
+    </tpl>
+</ul>
+<h4>Alerty:</h4>
+<dl>
+<tpl for="alertEvents">
+    <tpl if="solving == false">
+        <dd>{timeStamp}</dd><dt><tpl for="alert">{description}</tpl> <input type="button" onclick="MapLog.UnitFeature.solveAlert({alertEventId},this);" value="Ukončit" id="{alertEventId}_button" /> </dt>
+    </tpl>
+</tpl>
+<tpl for="alertEvents">
+    <tpl if="solving == true">
+        <dd>{timeStamp}</dd><dt><tpl for="alert">{description}</tpl> Ukončeno </dt>
+    </tpl>
+</tpl>
+</dl>
+</div>

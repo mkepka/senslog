@@ -1,0 +1,136 @@
+maplog.csshtml {
+    width: 100%;
+    height: 100%;
+}
+body, .x-border-layout-ct {
+    width: 100%;
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+    background: #efefef;
+    font-family: sans-serif;
+    font-size: 10pt;
+}
+
+div.olMapViewport{
+    background: white;
+    color: black;
+}
+
+#headding{
+    padding: 0px;
+    height: 78px;
+    background: #05053C;
+}
+
+h1 {
+    display: none;
+}
+
+#head {
+    height: 60px;
+}
+
+#maplogbody {
+    height: 800px;
+    width: 100%;
+}
+
+.MapLog-featureDiv, .MapLog-featurePopup{
+    font-size : 10px;
+    font-style : sans-serif;
+    background : white;
+    position:relative;
+    top:-30px;
+    left:0px;
+    margin : 2px;
+    /*
+    opacity:0.3;
+    filter:alpha(opacity=30)
+    */
+}
+.MapLog-featurePopup{
+    margin : 0px;
+    top : 0px;
+}
+
+.MapLog-activeIcon {
+    width: 20px;
+    height: 20px;
+    position:relative;
+    top:-25px;
+    left:25px;
+}
+
+.olControlUnitSelectorItemInactive {
+    background-image: url("select_units_off.png");
+}
+.olControlUnitSelectorItemActive {
+    background-image: url("select_units_on.png");
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: bold;
+    font-family: monospace;
+    padding: 5px;
+}
+
+div.olControlNavigationHistory {
+    background-image: url("navigation_history.png");
+}
+
+a img {
+    border: none;
+}
+
+#mainnav {
+    text-align: center;
+    padding: 20px;
+    clear:both;
+}
+#mainnav div {
+    display: block;
+    float: left;
+    width: 250px;
+    height: 250px;
+    border: 2px solid #ccc;
+    padding: 10px;
+    margin-right: 25px;
+}
+a{ 
+    font-weight: bold;
+    text-decoration: none;
+}
+
+#footer {
+    margin-top: 20px;
+    font-size: 0.7em;
+    background: #ccc;
+    padding: 5px;
+    width: 100%;
+}
+
+.navigation li {
+    display: inline;
+    border-right: solid white 1px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+.navigation {
+    display: inline;
+    margin-right: 20px;
+}
+
+#headnavigation {
+    color: white;
+    border-top: solid white 1px;
+    border-bottom: solid white 1px;
+    background: #05053C;
+}
+#headnavigation  a{
+    color:white;
+    font-weight: normal;
+    
+
+}

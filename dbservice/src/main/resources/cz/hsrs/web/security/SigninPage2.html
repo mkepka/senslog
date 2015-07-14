@@ -1,0 +1,23 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style/style.css"/>
+</head>
+<body>
+<wicket:extend>
+  The requested page is only available for authenticated users.
+
+  <form wicket:id="signInForm">
+    &nbsp;&nbsp;username 
+    <input type="text" wicket:id="wiaUsername" />
+    password 
+    <input type="password" wicket:id="wiaPassword" />
+    <input type="submit" value="sign in" />
+  </form>
+  <span wicket:id="feedback" />
+
+  <p>
+  <i>Hint: try user/user or admin/admin</i>
+  </p>
+</wicket:extend>
+</body>
+</html>

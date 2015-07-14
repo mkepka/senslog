@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta name="description" content="MapLog -- GPS/GPRS - Real Time car tracking system" />
+        <meta name="keywords" content="GPS,Tracking,Car,GPRS" />
+        <meta name="author" content="Help Service - Remote Sensing" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+         <wicket:link>
+        <link rel="stylesheet" type="text/css" href="maplog.css" />
+         </wicket:link>
+        <title>MapLog::Portal</title>
+    </head>
+    <body>
+        <div id="headding">
+            <a href="./"><wicket:link><img src="maplog_head.gif" width="800" height="78" /></wicket:link></a>
+        </div>
+        <div id="headnavigation">
+            <ul class="navigation">
+                <li><a href="uvod.html">Úvod</a></li>
+                <li><a href="uvod.html">Přínosy</a></li>
+                <li><a href="uvod.html">Princip činnosti</a></li>
+                <li><a href="uvod.html">Technické parametry</a></li>
+                <li><a href="uvod.html">Demo</a></li>
+                <li><a href="uvod.html">Kontakt</a></li>
+            </ul>
+            Přihlášen jako: <span style="color:red" wicket:id="message"></span> <a href="logout">Odhlásit</a>
+        </div>
+        <div id="mainnav">
+            <div>
+                <a href="DBService/map.html"><wicket:link><img src="mapa.png" /></wicket:link></a>
+                <a href="DBService/map.html">Mapa</a>
+            </div>
+            <div>
+                <a href="DBService/administrace.html"><wicket:link><img src="administrace.png" /></wicket:link></a>
+                <a href="DBService/administrace.html">Administrace</a>
+            </div>
+            <div>
+                <a href="DBService/kniha_jizd.html"><wicket:link><img src="kniha_jizd.png" /></wicket:link></a>
+                <a href="DBService/kniha_jizd.html">Kniha jízd</a>
+            </div>
+        </div>
+        <div style="clear:both"></div>
+        <div id="footer">
+            &copy; Help Service - Remote Sensing s.r.o, <a href="http://bnhelp.cz">http://bnhelp.cz</a>
+            Tel.: +420 317 724 620, e-mail: bnhelp@bnhelp.cz, Adresa: Vnoučkova 614, 256 01 Benešov
+        </div>
+           <span wicket:id="userPanel" style="float: right;">
+    [user panel here]
+  </span>
+    </body>
+</html>

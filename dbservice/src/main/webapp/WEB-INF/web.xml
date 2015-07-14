@@ -1,0 +1,167 @@
+<!DOCTYPE web-app PUBLIC
+ "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+ "http://java.sun.com/dtd/web-app_2_3.dtd" >
+
+<web-app>
+    <display-name>Archetype Created Web Application</display-name>
+    <!--
+        The WicketSesionFilter can be used to provide thread local access to
+        servlets/ JSPs/ etc
+    -->
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            FeederServlet</display-name>
+        <servlet-name>FeederServlet</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.feeder.FeederServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FeederServlet</servlet-name>
+        <url-pattern>/FeederServlet</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            ChartServlet</display-name>
+        <servlet-name>ChartServlet</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.ChartServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            SensorService</display-name>
+        <servlet-name>SensorService</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.SensorService</servlet-class>
+    </servlet>
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            AlertService</display-name>
+        <servlet-name>AlertService</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.AlertService</servlet-class>
+    </servlet>
+    
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            MMService</display-name>
+        <servlet-name>MMService</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.MMService</servlet-class>
+    </servlet>
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            DataService</display-name>
+        <servlet-name>DataService</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.DataService</servlet-class>
+    </servlet>
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            GroupService</display-name>
+        <servlet-name>GroupService</servlet-name>
+        <servlet-class>
+            cz.hsrs.servlet.provider.GroupService</servlet-class>
+    </servlet>
+
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            ControllerServlet</display-name>
+        <servlet-name>ControllerServlet</servlet-name>
+        <servlet-class>cz.hsrs.servlet.security.ControllerServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <description>
+        </description>
+        <display-name>
+            Logout</display-name>
+        <servlet-name>Logout</servlet-name>
+        <servlet-class>cz.hsrs.servlet.security.LogoutServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <description>
+        </description>
+        <display-name>ChangeLang</display-name>
+        <servlet-name>ChangeLang</servlet-name>
+        <servlet-class>cz.hsrs.servlet.lang.ChangeLangServlet</servlet-class>
+    </servlet>
+    
+
+    <servlet-mapping>
+        <servlet-name>Logout</servlet-name>
+        <url-pattern>/Logout</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ChangeLang</servlet-name>
+        <url-pattern>/ChangeLang</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ControllerServlet</servlet-name>
+        <url-pattern>/ControllerServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ChartServlet</servlet-name>
+        <url-pattern>/ChartServlet</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>DataService</servlet-name>
+        <url-pattern>/DataService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>GroupService</servlet-name>
+        <url-pattern>/GroupService</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>SensorService</servlet-name>
+        <url-pattern>/SensorService</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>AlertService</servlet-name>
+        <url-pattern>/AlertService</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>MMService</servlet-name>
+        <url-pattern>/MMService</url-pattern>
+    </servlet-mapping>
+
+    <init-param>
+        <param-name>development</param-name>
+        <param-value>false</param-value>
+    </init-param>
+
+    <welcome-file-list>
+        <welcome-file>crossroad.jsp</welcome-file>
+    </welcome-file-list>
+
+    <listener>
+        <description>sessionListener</description>
+        <listener-class>cz.hsrs.servlet.security.SessionListener</listener-class>
+    </listener>
+
+    <session-config>
+        <session-timeout>240</session-timeout>
+    </session-config>
+
+</web-app>

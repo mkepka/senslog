@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta name="description" content="MapLog -- GPS/GPRS - Real Time car tracking system" />
+        <meta name="keywords" content="GPS,Tracking,Car,GPRS" />
+        <meta name="author" content="Help Service - Remote Sensing" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <wicket:link>
+        <link rel="stylesheet" type="text/css" href="maplog.css" />
+        </wicket:link>
+          <wicket:link>
+        <link rel="stylesheet" type="text/css" href="signin.css" />
+        </wicket:link>
+        <title>MapLog::Login</title>
+    </head>
+   
+    <body>
+        <h1>MapLog</h1>
+        <h2>GPS/GPRS - Real Time sledovací systém vozidel</h2>
+        <div id="headnavigation">
+            <ul class="navigation">
+                <li><a href="uvod.html">Úvod</a></li>
+                <li><a href="uvod.html">Pře­nosy</a></li>
+                <li><a href="uvod.html">Princip činnosti</a></li>
+                <li><a href="uvod.html">Technické parametry</a></li>
+                <li><a href="uvod.html">Demo</a></li>
+                <li><a href="uvod.html">Kontakt</a></li>
+            </ul>
+        </div>
+        
+  
+        <form wicket:id="signInForm">
+        <table>
+            <tr>
+                <td><label for="login">Login</label></td>
+                <td><input type="text" wicket:id="wiaUsername" /></td>
+            </tr>
+            <tr>
+                <td><label for="password">Password</label></td>
+                <td> <input type="password" wicket:id="wiaPassword" /></td>
+            </tr>
+            <tr><td colspan="2"><input type="submit" value="sign in" /></td></tr>
+        </table>
+        </form>
+    
+        <span wicket:id="feedback" />
+        <div style="clear:both"></div>
+        <div id="footer">
+            &copy; Help Service - Remote Sensing s.r.o, <a href="http://bnhelp.cz">http://bnhelp.cz</a>
+            Tel.: +420 317 724 620, e-mail: bnhelp@bnhelp.cz, Adresa: Vnoučkova 614, 256 01 Benešov
+        </div>
+    </body>
+</html>

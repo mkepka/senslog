@@ -1,0 +1,6 @@
+For MapLog we are using JSDoc Documentation Tool [1]. The documentation can
+be generated like follows:
+
+   jsdoc --project-summary ABOUT --logo ../img/maplog-logo.png --project-name "MapLog"  --page-foote "&copy; Help Service - Remote Sensing 2009" -r . 
+
+[1] http://jsdoc.sourceforge.net/ 
