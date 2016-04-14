@@ -23,7 +23,6 @@
         %>
         <div id="headding">
             <div id="head">
-                <!-- <img src="img/logo-foodie.png" style="padding-left:20px; padding-top: 2px">-->
                 <%try {%>
                     <%if(SQLExecutor.getBrand_picture_name()!=null){%>
                         <%="<img src=\"img/"+SQLExecutor.getBrand_picture_name()+"\" style=\"padding-left:20px; padding-top: 2px\">"%> 
@@ -31,14 +30,6 @@
                 <% } catch (Exception e) {session.invalidate();}%>
             </div>
             <div id="headnavigation">
-                <!-- ul class="navigation">
-                    <li><a href="uvod.html">Úvod</a></li>
-                    <li><a href="uvod.html">Přínosy</a></li>
-                    <li><a href="uvod.html">Princip činnosti</a></li>
-                    <li><a href="uvod.html">Technické parametry</a></li>
-                    <li><a href="uvod.html">Demo</a></li>
-                    <li><a href="uvod.html">Kontakt</a></li>
-                </ul-->
                 <div id="logininfo">
                 <%try {%>
                     <%=l.get(Labels.loginas) %> <%=JSPHelper.getUserName(session)%> <a href="Logout"><%=l.get(Labels.logout) %></a>
