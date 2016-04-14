@@ -71,7 +71,7 @@ public class SQLExecutor {
         prop = proper;
         mycp = new ConnectionPool((String) prop.get("Address"),
                 (String) prop.get("Username"), (String) prop.get("Password"));
-        mycp.setMaxPoolSize(2);
+        mycp.setMaxPoolSize(5);
         mycp.setMinPoolSize(1);
         
         UnitsPositions_table = prop.getProperty("UnitsPositions_table");
@@ -107,7 +107,8 @@ public class SQLExecutor {
      * Executes UPDATE
      * 
      * @param sql
-     * @return
+     * @return either (1) the row count for SQL DML statements
+     *         or (2) 0 for SQL statements that return nothing
      * @throws SQLException
      */
     public static synchronized int executeUpdate(String sql)

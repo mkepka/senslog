@@ -217,12 +217,12 @@ public class TestSpacialIgnitionCases {
         
     }
     
-    private void insObs(UnitPosition p, int status) throws SQLException{
+    private void insObs(UnitPosition p, double status) throws SQLException{
         Observation o = new Observation(p.internalGetTime_stamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
         new TrackIgnitionSolver(o).solve();
     }
     
-    private void insObs(Date d, int status, long unit_id) throws SQLException{
+    private void insObs(Date d, double status, long unit_id) throws SQLException{
         Observation o = new Observation(d, status , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o).solve();
     }
