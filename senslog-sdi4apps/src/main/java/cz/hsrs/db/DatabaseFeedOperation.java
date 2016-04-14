@@ -23,66 +23,131 @@ public class DatabaseFeedOperation {
     // private boolean transactions = true;
 
     private static int transaction_size = 1;
-
-    private static int t = 0;    
-
+    private static int t = 0;
     private static String insertTransaction = "BEGIN;";
 
-    public static synchronized void insertObservation(Date date, long unit_id,
-            long sensor_id, double value) throws SQLException {
-
+    /**
+     * Method inserts new Observation to DB
+     * @param date when the observations was measured
+     * @param unit_id - id of unit
+     * @param sensor_id - id of sensor
+     * @param value - observed value, can be NaN
+     * @return true if observations was successfully inserted, false if it wasn't
+     * @throws SQLException
+     */
+    public static synchronized boolean insertObservation(Date date, long unit_id, long sensor_id, double value) throws SQLException {
         Observation o = new Observation(date, value, sensor_id, unit_id);
-    
+        boolean inserted = false;
         if (sensor_id == TrackIgnitionSolver.IGNITION_SENSOR_ID) {
             TrackIgnitionSolver solver = new TrackIgnitionSolver(o);
             solver.solve();
+            inserted = o.insertToDb();
         } else {
-            o.insertToDb();
+            inserted = o.insertToDb();
         }
+        return inserted;
     }
 
-    public static synchronized void insertPosition(long unit_id, double lat, double lon,
-            double alt, Date date) throws Exception {
-        insertPosition(unit_id, lat, lon, alt, date, Double.NaN);
+    /**
+     * Method inserts new position into DB 
+     * @param unit_id - id of unit
+     * @param lat - latitude
+     * @param lon - longitude
+     * @param alt - altitude
+     * @param date - when positions was measured
+     * @return true is positions was successfully inserted, false elsewhere 
+     * @throws Exception
+     */
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, Date date) throws Exception {
+        boolean inserted = insertPosition(unit_id, lat, lon, alt, date, Double.NaN);
+        return inserted;
     }
 
-    public static synchronized void insertPosition(long unit_id, double lat, double lon,
-            Date date) throws Exception {
-        insertPosition(unit_id, lat, lon, Double.NaN, date, Double.NaN);
+    /**
+     * Method inserts new position into DB
+     * @param unit_id - id of unit
+     * @param lat - latitude
+     * @param lon - longitude
+     * @param date - when positions was measured
+     * @return true is positions was successfully inserted, false elsewhere
+     * @throws Exception
+     */
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, Date date) throws Exception {
+        boolean inserted = insertPosition(unit_id, lat, lon, Double.NaN, date, Double.NaN);
+        return inserted;
     }
 
-    public static synchronized void insertPosition(long unit_id, double lat, double lon,
-            double alt, Date date, double speed) throws SQLException {
-        
+    /**
+     * Method inserts new position into DB 
+     * @param unit_id - id of unit
+     * @param lat - latitude
+     * @param lon - longitude
+     * @param alt - altitude
+     * @param date - when positions was measured
+     * @param speed - current speed of the unit
+     * @return true is positions was successfully inserted, false elsewhere
+     * @throws SQLException
+     */
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, Date date, double speed) throws SQLException {
+    	/**
+    	 * zde se ztrati alt!
+    	 */
+    	boolean useTracks = true;
+    	boolean inserted = false;
+    	
         UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
-        solve(p);
+        if(useTracks){
+        	inserted = solve(p);
+        }
+        else{
+        	inserted = p.insertToDb();
+        }
         checkAlertQueries(p);
-        // solveTrack(unit_id, insertStmt);
-
+        return inserted;
     }
 
-    public static synchronized void insertPosition(long unit_id, double lat, double lon,
-            double alt, double dop, Date date, double speed)
-            throws SQLException {
-
-        UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
-        solve(p);
+    /**
+     * Method inserts new position into DB 
+     * @param unit_id - id of unit
+     * @param lat - latitude
+     * @param lon - longitude
+     * @param alt - altitude
+     * @param dop - dilution of precision of the position
+     * @param date - when positions was measured
+     * @param speed - current speed of the unit
+     * @return true is positions was successfully inserted, false elsewhere
+     * @throws SQLException
+     */
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, double dop, Date date, double speed) throws SQLException {
+    	boolean useTracks = true;
+    	boolean inserted = false;
+    	
+    	UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
+        if (useTracks){
+        	inserted = solve(p);
+        }
+        else{
+        	inserted = p.insertToDb();
+        }
         checkAlertQueries(p);
+        return inserted;
     }
 
-    private static synchronized void solve(UnitPosition p) throws SQLException {
+    /**
+     * Method inserts new position into DB and tries to solve track
+     * @param p new position as UnitPosition object
+     * @return true if position was successfully inserted, false elsewhere
+     * @throws SQLException
+     */
+    private static synchronized boolean solve(UnitPosition p) throws SQLException {
         try {
-            // p.insertToDb(ConnectionManager.getConnection());
             TrackSolver solver = new TrackSolver(p);
-            solver.solve();
-
-            // threadTrack(p.getUnit_id());
+            boolean inserted = solver.solve();
+            return inserted;
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             throw new SQLException(e);
         }
     }
-    
 
     private static void addToTransaction(String query) throws SQLException,
             InstantiationException, IllegalAccessException {
@@ -112,20 +177,22 @@ public class DatabaseFeedOperation {
 
     private static synchronized void insertStatemant(String insertStmt) throws SQLException {
         try {
-            
             SQLExecutor.executeUpdate(insertStmt);
-
             logger.log(Level.FINE, "SQL succesfull - " + insertStmt);
-
         } catch (Exception e1) {
             logger.log(Level.INFO, e1.getMessage(), "Statement = '"
-                    + insertStmt);        
+                    + insertStmt);
             throw new SQLException(e1);
-
         }
-
     }
 
+    /**
+     * 
+     * @param date
+     * @param unit_id
+     * @param alert_id
+     * @throws SQLException
+     */
     public static synchronized void insertAlertEvent(Date date, long unit_id, int alert_id)
             throws SQLException {
         String insertStmt = " INSERT INTO alert_events (time_stamp, unit_id, alert_id) VALUES ("
@@ -142,6 +209,11 @@ public class DatabaseFeedOperation {
         insertStatemant(insertStmt);
     }
 
+    /**
+     * 
+     * @param event_id
+     * @throws SQLException
+     */
     public static synchronized void solvingAlertEvent(int event_id) throws SQLException {
         String updateStmt = "UPDATE alert_events SET solving = 'true' WHERE alert_event_id = "
                 + event_id + " ;";
@@ -149,6 +221,11 @@ public class DatabaseFeedOperation {
         insertStatemant(updateStmt);
     }
     
+    /**
+     * 
+     * @param pos
+     * @throws SQLException
+     */
     private static void checkAlertQueries(UnitPosition pos) throws SQLException{
         AlertUtil aUtil = new AlertUtil();
         List<AlertQuery> queryList = aUtil.getAlertQueries(pos.getUnit_id());
@@ -166,7 +243,7 @@ public class DatabaseFeedOperation {
                     else if(newStatusAQ == false && lastStatusAQ == true){
                         aUtil.setNewAlertQueryLastStatus(newStatusAQ, aQuery, pos);
                         insertAlertEvent(pos.internalGetTime_stamp(),pos.getUnit_id(),aQuery.getAlertId());
-                    }                    
+                    }
                 }
                 catch(NoItemFoundException ex){
                     boolean newStatusAQ = aUtil.checkAlertQuery(aQuery, pos);
@@ -176,7 +253,7 @@ public class DatabaseFeedOperation {
                         insertAlertEvent(pos.internalGetTime_stamp(),pos.getUnit_id(),aQuery.getAlertId());
                     }
                 }
-            }    
+            }
         }
     }
 }

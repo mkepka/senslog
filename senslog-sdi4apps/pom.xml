@@ -3,7 +3,7 @@
 	<groupId>cz.hsrs.maplog</groupId>
 	<artifactId>DBService</artifactId>
 	<packaging>war</packaging>
-	<version>1.3.1-SNAPSHOT</version>
+	<version>1.4-SNAPSHOT</version>
 	<name>dbservice Maven Webapp</name>
 	<url>http://maven.apache.org</url>
 
@@ -45,26 +45,15 @@
 				<artifactId>maven-jetty-plugin</artifactId>
 				<version>6.1.22</version>
 			</plugin>
-<!--
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>tomcat-maven-plugin</artifactId>
-				<version>1.1</version>
-				<configuration>
-					<url>http://foodie.lesprojekt.cz:8080/manager/html</url> 
-					<server>foodietomcat</server>
-					<path>/DBService</path>
-				</configuration>
-			</plugin>
--->
+
 		<plugin>
 			<groupId>org.apache.tomcat.maven</groupId>
 			<artifactId>tomcat7-maven-plugin</artifactId>
 			<version>2.2</version>
 			<configuration>
 				<path>/SensLog</path>
-				<url>http://otn.bnhelp.cz/manager/text</url>
-				<server>otntomcat</server>
+				<url>http://portal.sdi4apps.eu/manager/text</url>
+				<server>sdi4apps_tomcat</server>
 			</configuration>
 		</plugin>
 
@@ -82,6 +71,7 @@
 							<Implementation-Build>${buildNumber}</Implementation-Build>
 						</manifestEntries>
 					</archive>
+					<warSourceExcludes>wwwlibs/**</warSourceExcludes>
 				</configuration>
 			</plugin>
 
@@ -226,18 +216,12 @@
 			</plugin>
 		</plugins>
 	</reporting>
-<!--
+	
 	<scm>
-		<connection>scm:svn:svn://bnhelp.cz/maplog/tags/DBService-1.2</connection>
-		<developerConnection>scm:svn:svn://bnhelp.cz/maplog/tags/DBService-1.2</developerConnection>
-		<url>http://somerepository.com/view.cvs/tags/DBService-1.2</url>
-	</scm>
--->	
-	<scm>
-		<connection>scm:git:git+ssh://git@git.ccss.cz/ccss/maplogagri</connection>
-		<developerConnection>scm:git:git+ssh://git@git.ccss.cz/ccss/maplogagri</developerConnection>
-		<url>http://somerepository.com/view.cvs/tags/DBService-1.3</url>
-	</scm>
+        <connection>scm:git:git://github.com/mkepka/senslog.git</connection>
+        <developerConnection>scm:git:git@github.com:mkepka/senslog.git</developerConnection>
+        <url>https://github.com/mkepka/senslog</url>
+    </scm>
 
 	<repositories>
 		<repository>

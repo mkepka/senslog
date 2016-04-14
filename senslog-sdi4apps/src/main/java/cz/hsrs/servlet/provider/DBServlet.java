@@ -20,194 +20,217 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cz.hsrs.db.pool.SQLExecutor;
+import cz.hsrs.db.util.UserUtil;
 import cz.hsrs.servlet.security.JSPHelper;
 import cz.hsrs.servlet.security.LoginUser;
 
 public abstract class DBServlet extends HttpServlet {
 
-	public static String VERSION;
-	public static String BUILD;
+    private static final long serialVersionUID = 1L;
+    public static String VERSION;
+    public static String BUILD;
 
-	protected static Logger logger = Logger
-			.getLogger(SQLExecutor.LOGGER_ID);
+    protected static Logger logger = Logger.getLogger(SQLExecutor.LOGGER_ID);
 
-	// public ConnectionManager conManager = ConnectionManager;
-	@Override
-	public void destroy() {		
-		try {
-			 SQLExecutor.close();
-			// ConnectionManager.getConnection().commit();
-			// ConnectionManager.getConnection().close();
-		} catch (Exception e) {			
-			logger.log(Level.SEVERE, e.getMessage(), e);
-		}
-		super.destroy();
-	}
+    @Override
+    public void destroy() {
+        try {
+             SQLExecutor.close();
+            // ConnectionManager.getConnection().commit();
+            // ConnectionManager.getConnection().close();
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
+        super.destroy();
+    }
 
-	/**
-	 * Solve Exception what to do with Exceptions during get requestes
-	 * 
-	 * @param e
-	 * @param out
-	 * @throws ServletException
-	 */
-	public void solveGetException(Exception e, PrintWriter out)
-			throws ServletException {
-		if (e instanceof SQLException) {
-			out.print(e.getMessage());
-		} 
-		
-			logger.log(Level.WARNING, e.getMessage(), e);
-			try {
-				//logger.log(Level.WARNING, "Going to destroy connections...");
-				logger.log(Level.WARNING,e.getMessage(), e);
-				// ConnectionManager.destConnection();
-				
-				throw new ServletException("Wrong request ", e);
-				// setDataBaseConnection();
-				// ConnectionManager.getPooledConnection();
-				// db = new UtilFactory();
-				// doGet(request, response);
-			} catch (Exception e1) {			
-				e.printStackTrace();
-				logger.log(Level.WARNING, e.getMessage(), e);
-				throw new ServletException(e);
-			}
-		
-	}
+    /**
+     * Solve Exception what to do with Exceptions during get requestes
+     * 
+     * @param e
+     * @param out
+     * @throws ServletException
+     */
+    public void solveGetException(Exception e, PrintWriter out)throws ServletException {
+        if (e instanceof SQLException) {
+            out.print(e.getMessage());
+        }
+        
+        logger.log(Level.WARNING, e.getMessage(), e);
+        
+        try {
+            //logger.log(Level.WARNING, "Going to destroy connections...");
+            //logger.log(Level.WARNING,e.getMessage(), e);
+            // ConnectionManager.destConnection();
+            throw new ServletException("Wrong request ", e);
+            // setDataBaseConnection();
+            // ConnectionManager.getPooledConnection();
+            // db = new UtilFactory();
+            // doGet(request, response);
+        } catch (Exception e1) {
+            e.printStackTrace();
+            logger.log(Level.WARNING, e.getMessage(), e);
+            throw new ServletException(e);
+        }
+    }
 
-	/*
-	 * protected String getUserFromSession(){ return WiaSession.get().getUser();
-	 * }
-	 */
+    /*
+     * protected String getUserFromSession(){ return WiaSession.get().getUser();
+     * }
+     */
 
-	@Override
-	public void init() throws ServletException {
-		setDataBaseConnection();
+    @Override
+    public void init() throws ServletException {
+        setDataBaseConnection();
 
-		// Locale locale = new Locale("cz", "CZ");
-		// Locale.setDefault(locale);
+        // Locale locale = new Locale("cz", "CZ");
+        // Locale.setDefault(locale);
 
-		/** Initialize logging properties */
-		/*
-		 * System.setProperty("java.util.logging.config.file",
-		 * getServletContext() .getRealPath("WEB-INF/logging.properties"));
-		 */
+        /** Initialize logging properties */
+        /*
+         * System.setProperty("java.util.logging.config.file",
+         * getServletContext() .getRealPath("WEB-INF/logging.properties"));
+         */
 
-		try {
-			String conffile = "logging.properties";
-			if (SQLExecutor.getConfigfile()!=null) {
-				conffile  = SQLExecutor.getConfigfile();
-			}
-			FileInputStream fstrem = new FileInputStream(new File(
-					getServletContext().getRealPath("WEB-INF/"+conffile)));
-			LogManager.getLogManager().readConfiguration(fstrem);
-			LogManager.getLogManager().addLogger(logger);
-		
+        try {
+            String conffile = "logging.properties";
+            if (SQLExecutor.getConfigfile()!=null) {
+                conffile  = SQLExecutor.getConfigfile();
+            }
+            FileInputStream fstrem = new FileInputStream(
+                    new File(getServletContext().getRealPath("WEB-INF/"+conffile)));
+            LogManager.getLogManager().readConfiguration(fstrem);
+            LogManager.getLogManager().addLogger(logger);
+        
 
-			// LogManager.getLogManager().getProperty()
-		} catch (SecurityException e1) {
-			logger.log(Level.INFO, e1.getMessage());
-		} catch (IOException e2) {
-			logger.log(Level.INFO, e2.getMessage());
-		}
-		
-		logger.log(Level.INFO, "Logging inialized Succesefully!");
-		
+            // LogManager.getLogManager().getProperty()
+        } catch (SecurityException e1) {
+            logger.log(Level.INFO, e1.getMessage());
+        } catch (IOException e2) {
+            logger.log(Level.INFO, e2.getMessage());
+        }
+        
+        logger.log(Level.INFO, "Logging inialized Succesefully!");
+        
 
-		/*
-		 * logger.log(Level.INFO, "Properties: " +
-		 * System.getProperty("java.util.logging.config.file"));
-		 */
+        /*
+         * logger.log(Level.INFO, "Properties: " +
+         * System.getProperty("java.util.logging.config.file"));
+         */
 
-		
-		/**
-		 * get version number
-		 */
-		try {
-			String appServerHome = getServletContext().getRealPath("/");
+        
+        /**
+         * get version number
+         */
+        try {
+            String appServerHome = getServletContext().getRealPath("/");
 
-			File manifestFile = new File(appServerHome, "META-INF/MANIFEST.MF");
+            File manifestFile = new File(appServerHome, "META-INF/MANIFEST.MF");
 
-			Manifest mf = new Manifest();
-			mf.read(new FileInputStream(manifestFile));
+            Manifest mf = new Manifest();
+            mf.read(new FileInputStream(manifestFile));
 
-			Attributes atts = mf.getMainAttributes();
+            Attributes atts = mf.getMainAttributes();
 
-			VERSION = atts.getValue("Implementation-Version");
-			BUILD = atts.getValue("Implementation-Build");
-		} catch (FileNotFoundException e) {		
-			logger.log(Level.INFO, e.getMessage());
-		} catch (IOException e) {			
-			logger.log(Level.INFO, e.getMessage());
-		}
+            VERSION = atts.getValue("Implementation-Version");
+            BUILD = atts.getValue("Implementation-Build");
+        } catch (FileNotFoundException e) {        
+            logger.log(Level.INFO, e.getMessage());
+        } catch (IOException e) {            
+            logger.log(Level.INFO, e.getMessage());
+        }
 
-		super.init();
-	}
+        super.init();
+    }
 
-	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		req.setCharacterEncoding("UTF-8");
-		resp.setCharacterEncoding("UTF-8");
-	}
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        // TODO Auto-generated method stub
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+    }
 
-	protected void setDataBaseConnection() {
-		String propFile = getServletContext().getRealPath(
-				"WEB-INF/database.properties");
-		Properties prop = new Properties();
-		try {
-			prop.load(new FileInputStream(propFile));
-			SQLExecutor.setProperties(prop);
-		} catch (Exception e) {
+    protected void setDataBaseConnection() {
+        String propFile = getServletContext().getRealPath("WEB-INF/database.properties");
+        Properties prop = new Properties();
+        try {
+            prop.load(new FileInputStream(propFile));
+            SQLExecutor.setProperties(prop);
+        } catch (Exception e) {
 
-			logger.log(Level.SEVERE, e.getMessage(), e);
-		}
-	}
+            logger.log(Level.SEVERE, e.getMessage(), e);
+        }
+    }
 
-	/**
-	 * 
-	 * @param request
-	 * @return
-	 * @throws AuthenticationException
-	 */
-	@Deprecated
-	protected String getAuthenticatedUser(HttpServletRequest request)
-			throws AuthenticationException {
-		// LoginUser user = getAuthenticatedLoginUser(request);
-		LoginUser user = ((LoginUser) request.getSession().getAttribute(
-				JSPHelper.USERATTRIBUTE));
-		if (user == null) {
-			if (request.getRemoteHost().equals("127.0.0.1")
-					&& request.getParameter("user") != null) {
-				return request.getParameter("user");
-			} else
-				throw new AuthenticationException(
-						"Authentication fairlure for request "
-								+ request.getQueryString());
-		}
-		if (user.isAuthenticated()) {
-			return user.getUserName();
-		} else {
-			throw new AuthenticationException(
-					"Authentication fairlure for request "
-							+ request.getQueryString());
-		}
+    /**
+     * 
+     * @param request
+     * @return
+     * @throws AuthenticationException
+     */
+    @Deprecated
+    protected String getAuthenticatedUser(HttpServletRequest request)
+            throws AuthenticationException {
+        // LoginUser user = getAuthenticatedLoginUser(request);
+        LoginUser user = ((LoginUser) request.getSession().getAttribute(
+                JSPHelper.USERATTRIBUTE));
+        if (user == null) {
+            if (request.getRemoteHost().equals("127.0.0.1")
+                    && request.getParameter("user") != null) {
+                return request.getParameter("user");
+            } else
+                throw new AuthenticationException(
+                        "Authentication fairlure for request "
+                                + request.getQueryString());
+        }
+        if (user.isAuthenticated()) {
+            return user.getUserName();
+        } else {
+            throw new AuthenticationException(
+                    "Authentication fairlure for request "
+                            + request.getQueryString());
+        }
+    }
 
-	}
-
-	protected LoginUser getAuthenticatedLoginUser(HttpServletRequest request)
-			throws AuthenticationException {
-		LoginUser user = ((LoginUser) request.getSession().getAttribute(
-				JSPHelper.USERATTRIBUTE));
-		if (user.isAuthenticated()) {
-			return user;
-		} else {
-			throw new AuthenticationException(
-					"Authentication fairlure for request "
-							+ request.getQueryString());
-		}
-	}
-
+    /**
+     * Method for user authentication
+     * @param request incoming request with user attribute in session
+     * @return instance of LoginUser with checked credentials
+     * @throws AuthenticationException
+     */
+        protected LoginUser getAuthenticatedLoginUser(HttpServletRequest request) throws AuthenticationException {
+            LoginUser user = ((LoginUser) request.getSession().getAttribute(JSPHelper.USERATTRIBUTE));
+            if(user != null){
+                if (user.isAuthenticated()) {
+                    return user;
+                } else {
+                    throw new AuthenticationException("Authentication fairlure for request " + request.getQueryString());
+                }
+            }
+            else{
+                String remoteHost = request.getRemoteHost();
+                if ((remoteHost.equals("127.0.0.1") || remoteHost.equals("localhost")) && request.getParameter("user") != null) {
+                    UserUtil uUtil = new UserUtil();
+                    String userName = request.getParameter(JSPHelper.USERATTRIBUTE);
+                    boolean authenticated = false;
+                    try {
+                        String pass = uUtil.getUserPassword(userName);
+                        LoginUser userLocal = new LoginUser(request);
+                        authenticated = userLocal.athenticate(userName, pass);
+                        if(authenticated){
+                            return userLocal;
+                        }
+                        else{
+                            throw new AuthenticationException("Authentication fairlure for request " + request.getQueryString());
+                        }
+                    } catch (Exception e) {
+                        throw new AuthenticationException("Authentication fairlure for request " + request.getQueryString());
+                    }
+                }
+                else{
+                    throw new AuthenticationException("Authentication fairlure for request " + request.getQueryString());
+                }
+            }
+        }
 }

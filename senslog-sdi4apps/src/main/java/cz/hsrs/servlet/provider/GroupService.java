@@ -21,9 +21,7 @@ public class GroupService extends DBServlet{
 	private static final long serialVersionUID = 1L;
 	
 	public static final String GET_SUPER_GROUPS = "GetSuperGroups";
-	
 	public static final String GET_SUB_GROUPS = "GetSubGroups";
-	
 	public static final String GET_GROUPS = "GetGroups";
 
 	private UtilFactory db;
@@ -37,7 +35,7 @@ public class GroupService extends DBServlet{
         // TODO Auto-generated constructor stub
     }
 
-	public void init() throws ServletException {	
+	public void init() throws ServletException {
 		super.init();
 		
 		try {
@@ -55,34 +53,28 @@ public class GroupService extends DBServlet{
 		
 			try {
 				user = getAuthenticatedUser(request);
-			} catch (AuthenticationException e) {			
+			} catch (AuthenticationException e) {
 				throw new ServletException(e);
 			}
-				
+		response.addHeader("Access-Control-Allow-Origin", "*");
 		PrintWriter out = response.getWriter();
-		try {		
-		RequestParameters params = new RequestParameters(request);
-		    params.setUSER(user);
-		    if (request.getParameter(ServiceParameters.OPERATION)
-				.equals(GET_GROUPS)) {	
-			   //db.writeGroups(params.getUSER(), out);
-		    	DBJsonUtils.writeJSON(out, db.groupUtil.getGroups(params.getUSER()));
-		    }			
-			else if (request.getParameter(ServiceParameters.OPERATION)
-					.equals(GET_SUPER_GROUPS)) {	
-				DBJsonUtils.writeJSON(out, db.groupUtil.getSuperGroups(params.getUSER()));
-				
-			} else if (request.getParameter(ServiceParameters.OPERATION)
-					.equals(GET_SUB_GROUPS)) {
-				DBJsonUtils.writeJSON(out, db.groupUtil.getSubGroups(params.getGroup_id()));
-				
-						
-			} else {
-				throw new NullPointerException("No operation specified.");
-			}
-
+		try {
+            RequestParameters params = new RequestParameters(request);
+            params.setUSER(user);
+            if (request.getParameter(ServiceParameters.OPERATION).equals(GET_GROUPS)) {
+                DBJsonUtils.writeJSON(out, db.groupUtil.getGroups(params.getUSER()));
+            }
+            else if (request.getParameter(ServiceParameters.OPERATION).equals(GET_SUPER_GROUPS)) {
+                DBJsonUtils.writeJSON(out, db.groupUtil.getSuperGroups(params.getUSER()));
+            }
+            else if (request.getParameter(ServiceParameters.OPERATION).equals(GET_SUB_GROUPS)) {
+                DBJsonUtils.writeJSON(out, db.groupUtil.getSubGroups(params.getGroup_id()));
+            } 
+            else {
+                throw new NullPointerException("No operation specified.");
+            }
 		} catch (SQLException e) {
-			solveGetException(e, out);		
+			solveGetException(e, out);
 		}
 	}
 	/**
@@ -92,19 +84,20 @@ public class GroupService extends DBServlet{
 		// TODO Auto-generated method stub
 	}
 
+    /**
+     * Class parses parameters from incoming request
+     * @author mkepka
+     *
+     */
 	static class RequestParameters {
 		private String USER;
-	
 		private int group_id;
 
 		RequestParameters(HttpServletRequest request) throws NullPointerException{
-		//	USER = request.getParameter("user");//.toString();		
 			Object id = request.getParameter("parent_group");
 			if (id!= null) {
 				group_id = new Integer(id.toString());
 			}
-
-
 		}
 
 		public String getUSER() {

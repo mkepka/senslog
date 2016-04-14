@@ -1,11 +1,11 @@
 package cz.hsrs.db.util;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
+/**
+ * Factory class that generates instances of all util classes
+ * @author jezekjan
+ *
+ */
 public class UtilFactory {
-	Connection con;
-	
 	public TrackUtil trackUtil;
 	public UnitUtil unitUtil;
 	public UserUtil userUtil;
@@ -14,7 +14,6 @@ public class UtilFactory {
 	public AlertUtil alertUtil;
 	
 	public UtilFactory() {
-		//this.con = con;
 		trackUtil = new TrackUtil();
 		unitUtil= new UnitUtil();
 		userUtil= new UserUtil();
@@ -22,9 +21,4 @@ public class UtilFactory {
 		sensorUtil= new SensorUtil();
 		alertUtil = new AlertUtil();
 	}
-	
-	
-	
-
-
 }
