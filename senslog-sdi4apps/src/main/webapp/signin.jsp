@@ -1,5 +1,4 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8" %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
     <%@ page import = "cz.hsrs.servlet.security.*"%>
     <%@ page import = "cz.hsrs.db.pool.*"%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
@@ -7,13 +6,12 @@
     <head>
         <link rel="stylesheet" type="text/css" href="css/maplog.css" />
         <link rel="stylesheet" type="text/css" href="css/signin.css" />
-        <title>MapLogAgri - Login</title>
+        <title>SensLog - Login</title>
     </head>
 
     <body>
         <div id="headding">
             <div id="head">
-                <!--<img src="img/logo-foodie.png" style="padding-left:20px; padding-top: 2px">-->
                 <%try {%>
                     <%if (SQLExecutor.getBrand_picture_name()!=null){%>
                         <%="<img src=\"img/"+SQLExecutor.getBrand_picture_name()+"\" style=\"padding-left:20px; padding-top: 2px\">"%> 
@@ -21,14 +19,6 @@
                 <% } catch (Exception e) {session.invalidate();}%>
             </div>
         </div>
-        <!-- <h1>KdeMamKaru.cz</h1>
-        <div><a href="http://www.kdemamkaru.cz"><img src="img/logo.png" alt="logo firmy" width="166" height="52"/></a></div>
-        <div><img src="img/maplog_02_cz.gif" alt="banner"/></div>
-        <div id="headnavigation">
-            <ul class="navigation">
-                <li><a href="http://www.kdemamkaru.cz/">Kontakt</a></li>
-            </ul>
-        </div> -->
         
         <form action="ControllerServlet" method=post id="loginform">
         <table>
