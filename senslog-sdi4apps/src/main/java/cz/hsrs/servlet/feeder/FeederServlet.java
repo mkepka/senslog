@@ -72,6 +72,8 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
 		} catch (Exception e) {
 			logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
 		}
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		
 		/**
 		 * Insert observation request
 		 */
