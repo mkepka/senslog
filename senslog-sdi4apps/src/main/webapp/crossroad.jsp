@@ -15,7 +15,7 @@
          <wicket:link>
         <link rel="stylesheet" type="text/css" href="css/maplog.css" />
          </wicket:link>
-        <title>MapLogAgri</title>
+        <title>SensLog</title>
     </head>
     <body>
         <% JSPHelper.checkAuthentication(request, response);
