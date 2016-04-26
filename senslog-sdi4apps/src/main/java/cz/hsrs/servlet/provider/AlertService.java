@@ -13,10 +13,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.jetty.HttpHeaders;
+
 import cz.hsrs.db.DBJsonUtils;
 import cz.hsrs.db.model.AlertEvent;
 import cz.hsrs.db.util.UtilFactory;
 import cz.hsrs.servlet.feeder.ServiceParameters;
+import cz.hsrs.servlet.security.LoginUser;
 
 /**
  * Servlet handling request for alerts
@@ -42,16 +45,28 @@ public class AlertService extends DBServlet{
     
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         super.doGet(request, response);
-            
+        RequestParameters params = new RequestParameters(request);
         String user="";
+        /** standard authentication */
+        LoginUser loggedUser = null; 
+        try {
+            loggedUser = getAuthenticatedLoginUser(request);
+            user = loggedUser.getUserName();
+            //params.setUSER(userName);
+        } catch (AuthenticationException e1) {
+            throw new ServletException("Authentication failure for request "+ request.getQueryString());
+        }
+        /*
         try {
             user = getAuthenticatedUser(request);
         } catch (AuthenticationException e) {
             throw new ServletException(e);
         }
+        */
         
-        RequestParameters params = new RequestParameters(request);
         response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
+        
         PrintWriter out = response.getWriter();
         try {
             if (request.getParameter(ServiceParameters.OPERATION).equals(GET_ALERTS)) {

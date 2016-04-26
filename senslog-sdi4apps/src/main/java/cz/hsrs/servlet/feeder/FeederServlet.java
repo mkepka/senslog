@@ -21,6 +21,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.jetty.HttpHeaders;
+
 import cz.hsrs.db.DatabaseFeedOperation;
 import cz.hsrs.db.model.AlertEvent;
 import cz.hsrs.db.pool.SQLExecutor;
@@ -73,6 +75,7 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
 			logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
 		}
 		response.addHeader("Access-Control-Allow-Origin", "*");
+		response.addHeader(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8");
 		
 		/**
 		 * Insert observation request
@@ -191,7 +194,12 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
 	 */
 	public static Date parse(String dateString) throws ParseException{
 		    Date date = null;
-			SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+		    if(dateString.contains("T")){
+		    	dateString = dateString.replace("T", " ");
+		    }
+		    SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+		    //SimpleDateFormat formaterZone = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZ");
+			
 			try {
 				date = formater.parse(dateString);
 			} catch (ParseException e) {
@@ -214,7 +222,13 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
         long unit_id = Long.parseLong(request.getParameter(ServiceParameters.UNIT_ID));
         long sensor_id = Long.parseLong(request.getParameter(ServiceParameters.SENSOR_ID));
 
-        Date date = parse(time);// "2008-01-02 12:00:00");
+        //Date date = parse(time);// "2008-01-02 12:00:00");
+        Date date;
+        try {
+            date = parse(time);
+        } catch (ParseException e) {
+            throw new SQLException(e);
+        }
         boolean inserted = DatabaseFeedOperation.insertObservation(date, unit_id, sensor_id, value);
         return inserted;
     }

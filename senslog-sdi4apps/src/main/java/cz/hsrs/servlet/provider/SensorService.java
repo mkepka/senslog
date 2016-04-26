@@ -4,14 +4,18 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
+import javax.naming.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.jetty.HttpHeaders;
+
 import cz.hsrs.db.DBJsonUtils;
 import cz.hsrs.db.util.UtilFactory;
 import cz.hsrs.servlet.feeder.ServiceParameters;
+import cz.hsrs.servlet.security.LoginUser;
 
 public class SensorService extends DBServlet {
     
@@ -41,11 +45,23 @@ public class SensorService extends DBServlet {
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         super.doGet(request, response);
+        RequestParameters params = new RequestParameters(request);
+        
+        /** standard authentication */
+        LoginUser loggedUser = null; 
+        try {
+            loggedUser = getAuthenticatedLoginUser(request);
+            //userName = loggedUser.getUserName();
+            //params.setUSER(userName);
+        } catch (AuthenticationException e1) {
+            throw new ServletException("Authentication failure for request "+ request.getQueryString());
+        }
+        
         /**
          * 
          */
-        RequestParameters params = new RequestParameters(request);
         response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
         
         PrintWriter out = response.getWriter();
         try {
