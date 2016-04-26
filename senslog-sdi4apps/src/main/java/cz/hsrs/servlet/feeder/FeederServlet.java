@@ -193,6 +193,33 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
 	 * @throws ParseException
 	 */
 	public static Date parse(String dateString) throws ParseException{
+		Date date = null;
+		SimpleDateFormat formaterT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+		
+		if(dateString.contains("T")){
+			try {
+				date = formaterT.parse(dateString);
+			} catch (ParseException e) {
+				try{
+					date = formaterT.parse(dateString+getTimeZone());
+				} catch (ParseException e1){
+					throw new ParseException(e1.getMessage(), 1);
+				}
+			}
+		}
+		else{
+			try {
+				date = formater.parse(dateString);
+			} catch (ParseException e) {
+				try{
+					date = formater.parse(dateString+getTimeZone());
+				} catch (ParseException e1){
+					throw new ParseException(e1.getMessage(), 1);
+				}
+			}
+		}
+		/*
 		    Date date = null;
 		    if(dateString.contains("T")){
 		    	dateString = dateString.replace("T", " ");
@@ -205,6 +232,7 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
 			} catch (ParseException e) {
 				date = formater.parse(dateString+getTimeZone());
 			}
+		*/
 		return date;
 	}
 	

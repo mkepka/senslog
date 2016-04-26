@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.mortbay.jetty.HttpHeaders;
+
 import cz.hsrs.servlet.provider.DBServlet;
 
 /**
@@ -68,8 +70,9 @@ public class ControllerServlet extends DBServlet {
             }
             /** request doesn't contain coming parameter - came from REST client*/
             else{
-                resp.setStatus(200);
+                resp.setHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
                 resp.setHeader("Access-Control-Allow-Origin", "*");
+                resp.setStatus(200);
                 resp.getWriter().println("{\"sessionid\":\""+req.getSession().getId()+"\", "
                         + "\"language\":\""+user.getUserLanguage()+"\", \"audio\":\""+String.valueOf(user.isAudio())+"\"}");
             }
@@ -93,8 +96,8 @@ public class ControllerServlet extends DBServlet {
             } else{
                 resp.setStatus(401);
                 resp.setHeader("Access-Control-Allow-Origin", "*");
-                resp.setHeader("Content-Type", "text/plain; charset=utf-8");
-                resp.getWriter().println("Wrong username or password!");
+                resp.setHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
+                resp.getWriter().println("{\"AuthException\":\"Wrong username or password!\"}");
             }
         }
     }
