@@ -11,6 +11,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.jetty.HttpHeaderValues;
+import org.mortbay.jetty.HttpHeaders;
+
 import cz.hsrs.db.DBJsonUtils;
 import cz.hsrs.db.model.UnitPosition;
 import cz.hsrs.db.model.UnitTrack;
@@ -90,6 +93,7 @@ public class DataService extends DBServlet {
         }
 
         response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
         
         /**
          * /DataService?Operation=GetUnits&user=<>&unit_id=356173060488215
