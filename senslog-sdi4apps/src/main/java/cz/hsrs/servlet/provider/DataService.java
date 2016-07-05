@@ -5,16 +5,15 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.naming.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.mortbay.jetty.HttpHeaderValues;
 import org.mortbay.jetty.HttpHeaders;
 
 import cz.hsrs.db.DBJsonUtils;
+import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.model.UnitPosition;
 import cz.hsrs.db.model.UnitTrack;
 import cz.hsrs.db.model.composite.LastPosition;
@@ -22,7 +21,6 @@ import cz.hsrs.db.model.composite.RealUnit;
 import cz.hsrs.db.model.custom.UnitPositionSimple;
 import cz.hsrs.db.util.UtilFactory;
 import cz.hsrs.servlet.feeder.ServiceParameters;
-import cz.hsrs.servlet.security.LoginUser;
 
 /**
  * Servlet implementation class DataService
@@ -35,27 +33,16 @@ public class DataService extends DBServlet {
     private static final long serialVersionUID = 1L;
 
     public static final String GET_TRACK = "GetTracks";
-
     public static final String GET_LAST_POSTION = "GetLastPositions";
-    
     public static final String GET_LAST_POSTION_WITH_STATUS = "GetLastPositionsWithStatus";
-    
     public static final String GET_UNITS = "GetUnits";
-
     public static final String GET_RECENT_TRACK = "GetRecentTracks";
-
     public static final String GET_POSITIONS = "GetPositions";
-
     public static final String GET_POSITIONS_RANGE = "GetPositionsDay";
-
     public static final String GET_UNITS_LIST = "GetUnitsList";
 
     private UtilFactory db;
     
-//    private ConnectionManager cm = new ConnectionManager();
-
-    //private RequestParameters params;
-
     /**
      * @see HttpServlet#HttpServlet()
      */
@@ -71,10 +58,10 @@ public class DataService extends DBServlet {
     protected void doGet(HttpServletRequest request,
             HttpServletResponse response) throws ServletException, IOException {
         super.doGet(request, response);
-        String user="";
         RequestParameters params = new RequestParameters(request);
         
         /* Deprecated authentication
+        String user="";
         try {
             user = getAuthenticatedUser(request);
         } catch (AuthenticationException e) {
@@ -82,8 +69,26 @@ public class DataService extends DBServlet {
         }
         */
         
+        /** For SDI4Apps purpose only temporary */
+        String user = params.getUSER();
+        if(user == null){
+            throw new ServletException("Authentication failure, no user specified for request: "+ request.getQueryString());
+        }
+        else{
+            try {
+                String testLang = db.userUtil.getUserLanguage(user);
+                if(testLang.isEmpty()){
+                    throw new ServletException("Authentication failure for request "+ request.getQueryString());
+                }
+            } catch (SQLException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            } catch (NoItemFoundException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            }
+        }
+        
         /** standard authentication */
-        LoginUser loggedUser = null; 
+        /*LoginUser loggedUser = null; 
         try {
             loggedUser = getAuthenticatedLoginUser(request);
             String userName = loggedUser.getUserName();
@@ -91,7 +96,8 @@ public class DataService extends DBServlet {
         } catch (AuthenticationException e1) {
             throw new ServletException("Authentication failure for request "+ request.getQueryString());
         }
-
+        */
+        /** Setting response headers */
         response.addHeader("Access-Control-Allow-Origin", "*");
         response.addHeader(HttpHeaders.CONTENT_TYPE, "application/json;charset=UTF-8");
         
@@ -163,7 +169,7 @@ public class DataService extends DBServlet {
         private String toTIME;
         private Integer LIMIT;
         private Long unit_id;
-    
+
         private String ordering;
         private final String ASC = "ASC";
         private final String DESC = "DESC";

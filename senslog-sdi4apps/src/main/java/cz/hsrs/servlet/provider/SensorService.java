@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
 
-import javax.naming.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -13,9 +12,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.mortbay.jetty.HttpHeaders;
 
 import cz.hsrs.db.DBJsonUtils;
+import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.util.UtilFactory;
 import cz.hsrs.servlet.feeder.ServiceParameters;
-import cz.hsrs.servlet.security.LoginUser;
 
 public class SensorService extends DBServlet {
     
@@ -48,13 +47,42 @@ public class SensorService extends DBServlet {
         RequestParameters params = new RequestParameters(request);
         
         /** standard authentication */
+        /*
         LoginUser loggedUser = null; 
         try {
             loggedUser = getAuthenticatedLoginUser(request);
-            //userName = loggedUser.getUserName();
-            //params.setUSER(userName);
+            userName = loggedUser.getUserName();
+            params.setUSER(userName);
         } catch (AuthenticationException e1) {
             throw new ServletException("Authentication failure for request "+ request.getQueryString());
+        }*/
+        
+        /** Deprecated authentication */
+        /*
+        String user="";
+        try {
+            user = getAuthenticatedUser(request);
+        } catch (AuthenticationException e) {
+            throw new ServletException(e);
+        }
+        */
+        
+        /** For SDI4Apps purpose only temporary */
+        String user = params.getUSER();
+        if(user == null){
+            throw new ServletException("Authentication failure, no user specified for request: "+ request.getQueryString());
+        }
+        else{
+            try {
+                String testLang = db.userUtil.getUserLanguage(user);
+                if(testLang.isEmpty()){
+                    throw new ServletException("Authentication failure for request "+ request.getQueryString());
+                }
+            } catch (SQLException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            } catch (NoItemFoundException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            }
         }
         
         /**
@@ -93,13 +121,18 @@ public class SensorService extends DBServlet {
         }
     }
 
+    /**
+     * 
+     * @author mkepka
+     *
+     */
     static class RequestParameters {
-
         private long unit_id;
         private long sensor_id;
         private String from;
         private String to;
         private String trunc;
+        private String USER;
 
         RequestParameters(HttpServletRequest request)throws NullPointerException {
             Object uid = request.getParameter("unit_id");
@@ -129,6 +162,11 @@ public class SensorService extends DBServlet {
             } else {
                 to = "3000-01-01 00:00:00+01";
             }
+            
+            Object userO = request.getParameter("user");
+            if(userO != null){
+                USER = userO.toString();
+            }
         }
 
         public long getUnit_id() {
@@ -141,6 +179,10 @@ public class SensorService extends DBServlet {
 
         public String getTrunc() {
             return trunc;
+        }
+        
+        public String getUSER() {
+            return USER;
         }
     }
 }

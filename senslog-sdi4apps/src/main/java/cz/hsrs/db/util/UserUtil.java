@@ -61,6 +61,23 @@ public class UserUtil extends GroupUtil {
                     + " not found.");
     }
     
+    /**
+     * Method select groupId of given user
+     * @param userName of given user
+     * @return groupId as int or null if there is not any user with given userName
+     * @throws SQLException
+     */
+    public static Integer getUserGroupId(String userName) throws SQLException{
+    	String query = "SELECT group_id FROM system_users WHERE user_name ='"+userName+"';";
+    	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+    	if(res.next()){
+    		return res.getInt(1);
+    	}
+    	else{
+    		return null;
+    	}
+    }
+    
     
 /*
     public List<String> getUserOperation(String role){
