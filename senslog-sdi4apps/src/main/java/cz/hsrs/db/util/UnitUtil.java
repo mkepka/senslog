@@ -63,6 +63,18 @@ public class UnitUtil extends DBUtil {
                 + unit_id + ",'" + description + "');";
         return SQLExecutor.executeUpdate(queryConf);
     }
+    
+    /**
+     * Method pairs given unit to given group
+     * @param unitId of unit
+     * @param groupId of group
+     * @return either (1) the row count for SQL DML statements or (2) 0 for SQL statements that return nothing
+     * @throws SQLException
+     */
+    public int pairUnitToGroup(long unitId, int groupId) throws SQLException{
+        String insUtG = "INSERT INTO units_to_groups(unit_id, group_id) VALUES("+unitId+", "+groupId+");";
+        return SQLExecutor.executeUpdate(insUtG);
+    }
 
     public int getUnitConfTimeById(long unit_id) throws SQLException,
             NoItemFoundException {
@@ -166,13 +178,61 @@ public class UnitUtil extends DBUtil {
 
         
     }
+    
+    /**
+     * Method gets next value for unit_id, confirms if there is not any unit with same id in DB
+     * @return new unit_id if there is not same unit in DB or null if it is not possible o select new unit_id
+     * @throws SQLException
+     */
+    public Long getNextUnitID() throws SQLException{
+        boolean exists = true;
+        Long newId = null;
+        while(exists == true){
+            try{
+                String selectId = "SELECT nextval('units_unit_id'::regclass);";
+                ResultSet resId = SQLExecutor.getInstance().executeQuery(selectId);
+                if(resId.next()){
+                    newId = resId.getLong(1);
+                }
+                else{
+                    return null;
+                }
+                Unit isSame = getUnit(newId);
+                if(isSame==null){
+                    exists = false;
+                }
+            } catch(SQLException e){
+                throw new SQLException("Unit can't get new ID!");
+            }
+        }
+        return newId;
+    }
+    
     public Unit getUnit(long unit_id) throws SQLException {
-        String query = "SELECT holder_id, description FROM units WHERE unit_id = "
-                + unit_id;
+        String query = "SELECT holder_id, description FROM units WHERE unit_id = "+ unit_id;
         ResultSet res = stmt.executeQuery(query);
         if (res.next()) {
             return new Unit(unit_id, res.getInt("holder_id"), res
                     .getString("description"));
+        } else
+            return null;
+    }
+    
+    /**
+     * Method selects unit if there is unit with given unitId paired with given groupId
+     * @param unitId - id of unit
+     * @param groupId - id of group
+     * @return Unit object if there is the unit already in DB, null if there is not
+     * @throws SQLException
+     */
+    public Unit getUnitByGroup(long unitId, int groupId) throws SQLException {
+        String query = "SELECT holder_id, description FROM units u, units_to_groups utg"
+                + " WHERE u.unit_id = "+ unitId
+                + " AND utg.group_id = "+groupId
+                + " AND utg.unit_id = u.unit_id;";
+        ResultSet res = stmt.executeQuery(query);
+        if (res.next()) {
+            return new Unit(unitId, res.getInt("holder_id"), res.getString("description"));
         } else
             return null;
     }

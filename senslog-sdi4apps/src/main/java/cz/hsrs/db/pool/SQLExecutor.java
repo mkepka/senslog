@@ -84,7 +84,7 @@ public class SQLExecutor {
      * Executes SELECT
      * 
      * @param sql
-     * @return
+     * @return a ResultSet object that contains the data produced by the given query; never null 
      * @throws SQLException
      */
     public ResultSet executeQuery(String sql) throws SQLException {

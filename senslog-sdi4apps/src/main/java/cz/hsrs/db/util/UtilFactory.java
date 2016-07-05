@@ -12,6 +12,7 @@ public class UtilFactory {
 	public GroupUtil groupUtil;
 	public SensorUtil sensorUtil;
 	public AlertUtil alertUtil;
+	public ManagementUtil manUtil;
 	
 	public UtilFactory() {
 		trackUtil = new TrackUtil();
@@ -20,5 +21,6 @@ public class UtilFactory {
 		groupUtil= new GroupUtil();
 		sensorUtil= new SensorUtil();
 		alertUtil = new AlertUtil();
+		manUtil = new ManagementUtil();
 	}
 }
