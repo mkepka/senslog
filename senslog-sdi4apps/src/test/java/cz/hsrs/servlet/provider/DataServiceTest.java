@@ -77,8 +77,8 @@ public class DataServiceTest {
 			String uUnit2Group = "UPDATE units_to_groups SET group_id = "+group_id+" WHERE group_id = 1 AND unit_id = "+unit_id+" ;";
 			SQLExecutor.executeUpdate(uUnit2Group);
 			
-			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01"), unit_id, sensor1_id, 20);
-			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01"), unit_id, sensor2_id, 20);
+			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01"), unit_id, sensor1_id, 20.0);
+			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01"), unit_id, sensor2_id, 20.0);
 			//insert ignition status
 			//DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01"), unit_id, sensor_ign, 1);
 

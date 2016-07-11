@@ -105,20 +105,20 @@ public class UnitInsert {
         }
         /** there is not same unit in DB */
         if(unitDBinG == null && unitDB == null){
-            uUtil.insertUnit(this.unitId, this.description);        
+            uUtil.insertUnit(this.unitId, this.description);
             uUtil.pairUnitToGroup(this.unitId, groupId);
             
-            List<Sensor> insSensors = new LinkedList<Sensor>();        
+            List<Sensor> insSensors = new LinkedList<Sensor>();
             for(int s = 0; s < this.sensors.size(); s++){
                 Sensor insSen = sensors.get(s).insertToDb(this.unitId);
                 insSensors.add(insSen);
             }
             this.sensors = insSensors;
             return this;
-        /** there is same unit in DB but not paired with this user */    
+        /** there is same unit in DB but not paired with this user */
         } else if(unitDBinG == null && unitDB != null){
             uUtil.pairUnitToGroup(this.unitId, groupId);
-            List<Sensor> insSensors = new LinkedList<Sensor>();        
+            List<Sensor> insSensors = new LinkedList<Sensor>();
             for(int s = 0; s < this.sensors.size(); s++){
                 Sensor insSen = sensors.get(s).insertToDb(this.unitId);
                 insSensors.add(insSen);

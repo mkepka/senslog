@@ -113,6 +113,44 @@ public class GroupUtil extends ObservationUtil {
         }
         return subquery;
     }
+    
+    /**
+     * Method gets id of group by given name
+     * @param groupName - name of group
+     * @return id of group represents group.id
+     * @throws SQLException
+     */
+    public int getGroupIdByName(String groupName) throws SQLException{
+        String query = "SELECT id FROM groups WHERE group_name='"+groupName+"';";
+        ResultSet res = stmt.executeQuery(query);
+        if(res.next()){
+            return res.getInt(1);
+        }
+        else{
+            throw new SQLException("Any group of given name doesn't exist!");
+        }
+    }
+    
+    /**
+     * Method confirms that given group belongs to given user
+     * by selecting affiliated groups from database
+     * @param userName - name of user that is logged
+     * @param groupName - name of group
+     * @return true if given user is connected to given group, false otherwise
+     * @throws SQLException
+     */
+    public boolean checkGroupAffiliation2User(String userName, String groupName) throws SQLException{
+        boolean confirmed = false;
+        int groupId = getGroupIdByName(groupName);
+        List<Integer> groupsOfUser = getGroupIds(userName);
+        Iterator<Integer> groupsIter = groupsOfUser.iterator();
+        while (groupsIter.hasNext() && confirmed == false){
+            if (groupsIter.next() == groupId){
+                confirmed = true;
+            }
+        }
+        return confirmed;
+    }
 
     /*protected List<? extends DBObject> generateObjectList(DBObject element, ResultSet res) {
             

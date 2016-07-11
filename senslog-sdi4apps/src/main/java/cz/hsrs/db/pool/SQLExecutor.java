@@ -20,6 +20,8 @@ public class SQLExecutor {
     private static String UnitsLastPositions_table;
     
     private static String Brand_picture;
+    private static Boolean Last_value;
+    private static Boolean Vgi_observation;
     private static String configfile = null;
 
     private static ConnectionPool mycp;
@@ -78,6 +80,8 @@ public class SQLExecutor {
         UnitsTracks_table = prop.getProperty("UnitsTracks_table");
         UnitsLastPositions_table = prop.getProperty("UnitsLastPositions_table");
         Brand_picture = prop.getProperty("Brand_picture");
+        Last_value = Boolean.parseBoolean(prop.getProperty("Last_value"));
+        Vgi_observation = Boolean.parseBoolean(prop.getProperty("Vgi_observation"));
     }
 
     /**

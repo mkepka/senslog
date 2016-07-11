@@ -98,6 +98,10 @@ public class Sensor implements DBObject {
                     throw new NoItemFoundException("Sensor with given ID="+this.sensorId+" was not found!");
                 }
                 else{
+                    // there is sensor with same ID in DB
+                    if(sUtil.isSensorPairedToUnit(sensorId, unitId) == false){
+                        sUtil.pairUnitToSensor(unitId, sensorId);
+                    }
                     return senDB;
                 }
             }
@@ -118,6 +122,10 @@ public class Sensor implements DBObject {
                     if(senDB.getSensorName().equalsIgnoreCase(sensorName) == true){
                         if(senDB.getSensorType().equalsIgnoreCase(sensorType) == true && this.phenomenon.internalGetPhenomenonId() != null){
                             if(senDB.getPhenomenon().internalGetPhenomenonId().equalsIgnoreCase(this.phenomenon.internalGetPhenomenonId())){
+                                // there is sensor with same name, type and phenomenon Id in DB
+                                if(sUtil.isSensorPairedToUnit(sensorId, unitId) == false){
+                                    sUtil.pairUnitToSensor(unitId, sensorId);
+                                }
                                 return senDB;
                             }
                             else{
@@ -157,6 +165,7 @@ public class Sensor implements DBObject {
             }
             else{
                 if(this.sensorType != null && this.phenomenon != null){
+                // check if there is same phenomenon in DB
                     if(this.phenomenon.getPhenomenonName() != null && this.phenomenon.getUnit() != null){
                         Phenomenon phenDB = sUtil.getPhenomenonByName(this.phenomenon.getPhenomenonName());
                         if(phenDB != null){
@@ -167,6 +176,10 @@ public class Sensor implements DBObject {
                     }
                     if(senDB.getSensorType().equalsIgnoreCase(this.sensorType)==true && this.getPhenomenon().internalGetPhenomenonId() != null){
                         if(senDB.getPhenomenon().internalGetPhenomenonId().equalsIgnoreCase(this.phenomenon.internalGetPhenomenonId())){
+                            // there is sensor with same name and type in DB
+                            if(sUtil.isSensorPairedToUnit(senDB.getSensorId(), unitId) == false){
+                                sUtil.pairUnitToSensor(unitId, senDB.getSensorId());
+                            }
                             return senDB;
                         }
                         else{

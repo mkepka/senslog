@@ -35,9 +35,9 @@ public class SensorUtilTest {
 		DBHelper.setConnection();
 		
 		utilS = new SensorUtil();
-		DatabaseFeedOperation.insertObservation(format.parse(dateObs1), unit_id, sensor_id, 1);
-		DatabaseFeedOperation.insertObservation(format.parse(dateObs2), unit_id, sensor_id, 2);
-		DatabaseFeedOperation.insertObservation(format.parse(dateObs3), unit_id, sensor_id, 3);
+		DatabaseFeedOperation.insertObservation(format.parse(dateObs1), unit_id, sensor_id, 1.0);
+		DatabaseFeedOperation.insertObservation(format.parse(dateObs2), unit_id, sensor_id, 2.0);
+		DatabaseFeedOperation.insertObservation(format.parse(dateObs3), unit_id, sensor_id, 3.0);
 	}
 	
 	@Test

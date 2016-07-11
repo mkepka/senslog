@@ -34,7 +34,7 @@ public class DBUtil {
 		try {
 			List<DBObject> result = new LinkedList<DBObject>();
 			while (res.next()) {
-				DBObject dbob = (element.getClass().newInstance()).getDBObject(res);		
+				DBObject dbob = (element.getClass().newInstance()).getDBObject(res);
 				result.add(dbob);
 			}
 			return result;

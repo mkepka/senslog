@@ -2,6 +2,7 @@ package cz.hsrs.db.util;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 import cz.hsrs.db.model.Phenomenon;
@@ -9,6 +10,7 @@ import cz.hsrs.db.model.Sensor;
 import cz.hsrs.db.model.composite.AggregateObservation;
 import cz.hsrs.db.model.composite.ObservationValue;
 import cz.hsrs.db.model.composite.UnitSensor;
+import cz.hsrs.db.model.composite.UnitSensorObservation;
 import cz.hsrs.db.pool.SQLExecutor;
 
 public class SensorUtil extends TrackUtil {
@@ -65,6 +67,13 @@ public class SensorUtil extends TrackUtil {
         }
     }
     
+    /**
+     * Method checks if there is sensor in DB, given by Id or sensor name
+     * @param sensorId - id of sensor
+     * @param sensorName - name of sensor
+     * @return Sensor object from DB or null if there is not sensor with given id nor name
+     * @throws SQLException
+     */
     public Sensor getSensorByIdOrName(Long sensorId, String sensorName) throws SQLException {
         if(sensorId == null && sensorName != null){
             String query = "SELECT * FROM sensors WHERE sensor_name = '" + sensorName + "';";
@@ -159,7 +168,7 @@ public class SensorUtil extends TrackUtil {
         } else {
 
             String queryObservations = "select gid, observed_value, time_stamp"
-                    + " from observations " + "WHERE unit_id = " + unit_id
+                    + " from observations WHERE unit_id = " + unit_id
                     + " AND sensor_id = " + sensor_id + " AND time_stamp > '"
                     + from + "'" + " AND time_stamp < '" + to + "'";
             ResultSet res = stmt.executeQuery(queryObservations);
@@ -396,10 +405,9 @@ public class SensorUtil extends TrackUtil {
      * @throws SQLException
      */
     public boolean isSensorPairedToUnit(long sensorId, long unitId) throws SQLException{
-        String query = "SELECT sensor_id FROM units_to_sensors WHERE unit_id ="+unitId+" AND sensor_id ="+sensorId+";";
+        String query = "SELECT sensor_id, unit_id FROM units_to_sensors WHERE unit_id ="+unitId+" AND sensor_id ="+sensorId+";";
         ResultSet res = SQLExecutor.getInstance().executeQuery(query);
         if(res.next()){
-            //long sensorIdDB = res.getLong(1);
             return true;
         } else{
             return false;
@@ -444,5 +452,99 @@ public class SensorUtil extends TrackUtil {
                 +"', '"+phen.getPhenomenonName()
                 +"', '"+phen.getUnit()+"');";
         return SQLExecutor.executeUpdate(ins);
+    }
+    
+    /**
+     * Method gets last observation for given unit-sensor pair
+     * @param unitId - identifier of unit
+     * @param sensorId - identifier of sensor 
+     * @return ResultSet object represents last observation for given unit-sensor pair
+     * @throws SQLException
+     */
+    public List<ObservationValue> getSensorLastObservation(long unitId, long sensorId) throws SQLException {
+        String query = "SELECT time_stamp, gid, observed_value"
+                    + " FROM units_to_sensors uts"
+                    + " LEFT JOIN observations o ON uts.last_obs = o.time_stamp"
+                    + " WHERE uts.unit_id = "+unitId
+                    + " AND uts.sensor_id = "+sensorId
+                    + " AND uts.sensor_id = o.sensor_id;";
+        ResultSet res = stmt.executeQuery(query);
+        List<ObservationValue> obsList = new LinkedList<ObservationValue>();
+        while(res.next()){
+        	obsList.add(new ObservationValue(res.getDouble("observed_value"), res.getString("time_stamp"), res.getInt("gid")));
+        }
+        return obsList;
+    }
+    
+    /**
+     * Method gets list of last observations from all connected sensors for given unit
+     * @param unitId - identifier of unit
+     * @return list of UnitSensorObservation objects represents last observations from all connected sensors to given unit
+     * @throws SQLException
+     */
+    public List<UnitSensorObservation> getUnitSensorsLastObservations(long unitId) throws SQLException{
+        String query = "SELECT time_stamp, gid, observed_value, o.sensor_id, o.unit_id"
+                    + " FROM units_to_sensors uts"
+                    + " LEFT JOIN observations o ON uts.last_obs = o.time_stamp"
+                    + " WHERE uts.unit_id = " + unitId
+                    + " AND uts.sensor_id = o.sensor_id;";
+        ResultSet res = stmt.executeQuery(query);
+        List<UnitSensorObservation> obsList = new LinkedList<UnitSensorObservation>();
+        while(res.next()){
+        	obsList.add(new UnitSensorObservation(res));
+        }
+        return obsList;
+    }
+    
+    /**
+     * Method gets list of last observations from all connected sensors to all units belonging to given group
+     * @param groupName - name of group
+     * @return list of UnitSensorObservation objects represents last observations from all connected sensors to all units
+     * belonging to given group
+     * @throws SQLException
+     */
+    public List<UnitSensorObservation> getUnitsSensorsLastObservations(String groupName) throws SQLException{
+        String query = "SELECT time_stamp, gid, observed_value, o.sensor_id, o.unit_id"
+                    + " FROM groups g, units_to_groups utg, units_to_sensors uts"
+                    + " LEFT JOIN observations o ON uts.last_obs = o.time_stamp"
+                    + " WHERE g.group_name = '"+groupName+"'"
+                    + " AND g.id = utg.group_id"
+                    + " AND utg.unit_id = uts.unit_id"
+                    + " AND uts.unit_id = o.unit_id"
+                    + " AND uts.sensor_id = o.sensor_id"
+                    + " ORDER BY uts.unit_id, uts.sensor_id;";
+        ResultSet res = stmt.executeQuery(query);
+        List<UnitSensorObservation> obsList = new LinkedList<UnitSensorObservation>();
+        while(res.next()){
+        	obsList.add(new UnitSensorObservation(res));
+        }
+        return obsList;
+    }
+    
+    /**
+     * Method gets list of last observations of given connected sensor of all units belonging to given group.
+     * @param groupName - name of group
+     * @param sensorId - identifier of sensor
+     * @return list of UnitSensorObservation objects represents last observations for given connected sensors to all units
+     * belonging to given group
+     * @throws SQLException
+     */
+    public List<UnitSensorObservation> getUnitsSensorsLastObservations(String groupName, long sensorId) throws SQLException{
+        String query = "SELECT time_stamp, gid, observed_value, o.sensor_id, o.unit_id"
+                + " FROM groups g, units_to_groups utg, units_to_sensors uts"
+                + " LEFT JOIN observations o ON uts.last_obs = o.time_stamp"
+                + " WHERE g.group_name = '"+groupName+"'"
+                + " AND g.id = utg.group_id"
+                + " AND utg.unit_id = uts.unit_id"
+                + " AND uts.sensor_id = "+sensorId
+                + " AND uts.unit_id = o.unit_id"
+                + " AND uts.sensor_id = o.sensor_id"
+                + " ORDER BY uts.unit_id, uts.sensor_id;";
+        ResultSet res = stmt.executeQuery(query);
+        List<UnitSensorObservation> obsList = new LinkedList<UnitSensorObservation>();
+        while(res.next()){
+        	obsList.add(new UnitSensorObservation(res));
+        }
+        return obsList;
     }
 }
