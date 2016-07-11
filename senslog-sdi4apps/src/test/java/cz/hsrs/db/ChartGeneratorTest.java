@@ -43,25 +43,25 @@ public class ChartGeneratorTest {
 		utilS = new SensorUtil();
 		utilU = new UnitUtil();
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs1),
-				unit_id, sensor_id1, 1);
+				unit_id, sensor_id1, 1.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs2),
-				unit_id, sensor_id1, 2);
+				unit_id, sensor_id1, 2.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs3),
 				unit_id, sensor_id1, 1.5);
 		
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs1),
-				unit_id, sensor_id2, 3);
+				unit_id, sensor_id2, 3.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs2),
-				unit_id, sensor_id2, 4);
+				unit_id, sensor_id2, 4.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs3),
-				unit_id, sensor_id2, 2);
+				unit_id, sensor_id2, 2.0);
 		
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs1),
-				unit_id, sensor_id3, 5);
+				unit_id, sensor_id3, 5.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs2),
-				unit_id, sensor_id3, 4);
+				unit_id, sensor_id3, 4.0);
 		DatabaseFeedOperation.insertObservation(format.parse(dateObs3),
-				unit_id, sensor_id3, 6);
+				unit_id, sensor_id3, 6.0);
 	}
 
 	@AfterClass

@@ -34,54 +34,54 @@ import cz.hsrs.db.util.ServerUtil;
  * 
  */
 public class FeederServlet extends javax.servlet.http.HttpServlet implements javax.servlet.Servlet {
-	static final long serialVersionUID = 1L;
+    static final long serialVersionUID = 1L;
 
-	public static Logger logger = Logger.getLogger(SQLExecutor.LOGGER_ID);
-	private static List<URL> BACKUPURLS = new LinkedList<URL>();
-	
-	//private static String TIMEZONE;
-	
-	private static String getTimeZone(){
-		Calendar cal = Calendar.getInstance();
-		int z = ((cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / (60 * 1000)/60);
-		String tz = "+0"+String.valueOf(z).subSequence(0, 1)+"00";
-		return tz;
-	}
-	//SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    public static Logger logger = Logger.getLogger(SQLExecutor.LOGGER_ID);
+    private static List<URL> BACKUPURLS = new LinkedList<URL>();
+    
+    //private static String TIMEZONE;
+    
+    private static String getTimeZone(){
+        Calendar cal = Calendar.getInstance();
+        int z = ((cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET)) / (60 * 1000)/60);
+        String tz = "+0"+String.valueOf(z).subSequence(0, 1)+"00";
+        return tz;
+    }
+    //SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-	/*
-	 * (non-Java-doc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#HttpServlet()
-	 */
-	public FeederServlet() {
-		super();
-	}
+    /*
+     * (non-Java-doc)
+     * 
+     * @see javax.servlet.http.HttpServlet#HttpServlet()
+     */
+    public FeederServlet() {
+        super();
+    }
 
-	/*
-	 * (non-Java-doc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doGet(HttpServletRequest request,
-	 * HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request,
-			HttpServletResponse response) throws ServletException, IOException {
+    /*
+     * (non-Java-doc)
+     * 
+     * @see javax.servlet.http.HttpServlet#doGet(HttpServletRequest request,
+     * HttpServletResponse response)
+     */
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
 
-		/** forward request to other servers */
-		try {
-			ServerUtil ut = new ServerUtil();
-			ut.callServers(BACKUPURLS, request.getQueryString());
-		} catch (Exception e) {
-			logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
-		}
-		response.addHeader("Access-Control-Allow-Origin", "*");
-		response.addHeader(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8");
-		
-		/**
-		 * Insert observation request
-		 */
-		if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_OBSERVATION)) {
-			PrintWriter out = response.getWriter();
+        /** forward request to other servers */
+        try {
+            ServerUtil ut = new ServerUtil();
+            ut.callServers(BACKUPURLS, request.getQueryString());
+        } catch (Exception e) {
+            logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
+        }
+        response.addHeader("Access-Control-Allow-Origin", "*");
+        response.addHeader(HttpHeaders.CONTENT_TYPE, "text/plain;charset=UTF-8");
+        
+        /**
+         * Insert observation request
+         */
+        if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_OBSERVATION)) {
+            PrintWriter out = response.getWriter();
             try {
                 boolean inserted = insObservation(request);
                 out.print(inserted);
@@ -89,14 +89,14 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
                 logger.log(Level.WARNING, e.getMessage() + " query: "+ request.getQueryString(), e);
                 out.print(false);
             }
-		}
+        }
             
-		/**
-		 * Insert position request
-		 */
-		else if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_POSITION)) {
-			PrintWriter out = response.getWriter();
-			try {
+        /**
+         * Insert position request
+         */
+        else if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_POSITION)) {
+            PrintWriter out = response.getWriter();
+            try {
                 boolean inserted = insPosition(request);
                 out.print(inserted);
             } catch (Exception e) {
@@ -104,139 +104,139 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
                         + request.getQueryString(), e);
                 out.print(false);
             }
-		}
-		/*else if	(request.getParameter(ServiceParameters.OPERATION).equals(
-					ServiceParameters.INSERT_POI)) {
-				PrintWriter out = response.getWriter();
-				try {
-					POIUtil.insert(request);
-					out.print(true);
-				} catch (Exception e) {
-					logger.log(Level.WARNING, e.getMessage() + " query: "
-							+ request.getQueryString(), e);
-					out.print(false);
-				}
-			}*/
-			/**
-			 * Insert new alert event request
-			 */
-		else if (request.getParameter(ServiceParameters.OPERATION).equals(
-				ServiceParameters.INSERT_ALERT_EVENT)) {
-			PrintWriter out = response.getWriter();
-			try {
-				out.print(insAlertEvent(request)); // depends on existing older event!!!
-			} catch (Exception e) {
-				logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
-				out.print(false);
-			}
-			/**
-			 * Set solving parameter of alert event request
-			 */
-		} else if (request.getParameter(ServiceParameters.OPERATION).equals(
-				ServiceParameters.SOLVING_ALERT_EVENT)) {
-			PrintWriter out = response.getWriter();
-			try {
-				insSolvingAlertEvent(request);
-				out.print(true);
-			} catch (Exception e) {
-				logger.log(Level.WARNING, e.getMessage() + " query: "
-						+ request.getQueryString(), e);
-				out.print(false);
-			}
-		} else if (request.getParameter(ServiceParameters.OPERATION).equals("RESET")) {
-			SQLExecutor.close();
-			init();
-			response.sendRedirect("./monitor.jsp");
+        }
+        /*else if    (request.getParameter(ServiceParameters.OPERATION).equals(
+                    ServiceParameters.INSERT_POI)) {
+                PrintWriter out = response.getWriter();
+                try {
+                    POIUtil.insert(request);
+                    out.print(true);
+                } catch (Exception e) {
+                    logger.log(Level.WARNING, e.getMessage() + " query: "
+                            + request.getQueryString(), e);
+                    out.print(false);
+                }
+            }*/
+            /**
+             * Insert new alert event request
+             */
+        else if (request.getParameter(ServiceParameters.OPERATION).equals(
+                ServiceParameters.INSERT_ALERT_EVENT)) {
+            PrintWriter out = response.getWriter();
+            try {
+                out.print(insAlertEvent(request)); // depends on existing older event!!!
+            } catch (Exception e) {
+                logger.log(Level.WARNING, e.getMessage() + " query: " + request.getQueryString(), e);
+                out.print(false);
+            }
+            /**
+             * Set solving parameter of alert event request
+             */
+        } else if (request.getParameter(ServiceParameters.OPERATION).equals(
+                ServiceParameters.SOLVING_ALERT_EVENT)) {
+            PrintWriter out = response.getWriter();
+            try {
+                insSolvingAlertEvent(request);
+                out.print(true);
+            } catch (Exception e) {
+                logger.log(Level.WARNING, e.getMessage() + " query: "
+                        + request.getQueryString(), e);
+                out.print(false);
+            }
+        } else if (request.getParameter(ServiceParameters.OPERATION).equals("RESET")) {
+            SQLExecutor.close();
+            init();
+            response.sendRedirect("./monitor.jsp");
 
-		} else if (request.getParameter(ServiceParameters.OPERATION).equals("SLEEP")) {
-			try {
-				Thread.sleep(20000);
-				PrintWriter out = response.getWriter();
-				out.print("uzzzz....");
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        } else if (request.getParameter(ServiceParameters.OPERATION).equals("SLEEP")) {
+            try {
+                Thread.sleep(20000);
+                PrintWriter out = response.getWriter();
+                out.print("uzzzz....");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	/*
-	 * (non-Java-doc)
-	 * 
-	 * @see javax.servlet.http.HttpServlet#doPost(HttpServletRequest request,
-	 * HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    /*
+     * (non-Java-doc)
+     * 
+     * @see javax.servlet.http.HttpServlet#doPost(HttpServletRequest request,
+     * HttpServletResponse response)
+     */
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-		/**
-		 * Insert position via insert.jsp page form
-		 */
-		if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_POSITION)) {
-			PrintWriter out = response.getWriter();
-			try {
-				insPosition(request);
-				out.print("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>Insert title here</title></head>");
-				out.print(true);
-				out.print("<div><a href=\"./vypis.jsp?unit_id="+request.getParameter(ServiceParameters.UNIT_ID)+"\">Back to the list of graphs</a></div>");
-				out.print("</body></html>");
-			} catch (Exception e) {
-				//logger.log(Level.WARNING, e.getMessage() + " query: "+ request.getQueryString(), e);
-				out.print(false);
-			}
-		}
-		
-	}
+        /**
+         * Insert position via insert.jsp page form
+         */
+        if (request.getParameter(ServiceParameters.OPERATION).equals(ServiceParameters.INSERT_POSITION)) {
+            PrintWriter out = response.getWriter();
+            try {
+                insPosition(request);
+                out.print("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\"><title>Insert title here</title></head>");
+                out.print(true);
+                out.print("<div><a href=\"./vypis.jsp?unit_id="+request.getParameter(ServiceParameters.UNIT_ID)+"\">Back to the list of graphs</a></div>");
+                out.print("</body></html>");
+            } catch (Exception e) {
+                //logger.log(Level.WARNING, e.getMessage() + " query: "+ request.getQueryString(), e);
+                out.print(false);
+            }
+        }
+        
+    }
 
-	/**
-	 * 
-	 * @param dateString  Date in form of String in pattern "yyyy-MM-dd HH:mm:ssZ"
-	 * @return date as type Date
-	 * @throws ParseException
-	 */
-	public static Date parse(String dateString) throws ParseException{
-		Date date = null;
-		SimpleDateFormat formaterT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-		SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
-		
-		if(dateString.contains("T")){
-			try {
-				date = formaterT.parse(dateString);
-			} catch (ParseException e) {
-				try{
-					date = formaterT.parse(dateString+getTimeZone());
-				} catch (ParseException e1){
-					throw new ParseException(e1.getMessage(), 1);
-				}
-			}
-		}
-		else{
-			try {
-				date = formater.parse(dateString);
-			} catch (ParseException e) {
-				try{
-					date = formater.parse(dateString+getTimeZone());
-				} catch (ParseException e1){
-					throw new ParseException(e1.getMessage(), 1);
-				}
-			}
-		}
-		/*
-		    Date date = null;
-		    if(dateString.contains("T")){
-		    	dateString = dateString.replace("T", " ");
-		    }
-		    SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
-		    //SimpleDateFormat formaterZone = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZ");
-			
-			try {
-				date = formater.parse(dateString);
-			} catch (ParseException e) {
-				date = formater.parse(dateString+getTimeZone());
-			}
-		*/
-		return date;
-	}
-	
-	
+    /**
+     * 
+     * @param dateString  Date in form of String in pattern "yyyy-MM-dd HH:mm:ssZ"
+     * @return date as type Date
+     * @throws ParseException
+     */
+    public static Date parse(String dateString) throws ParseException{
+        Date date = null;
+        SimpleDateFormat formaterT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+        
+        if(dateString.contains("T")){
+            try {
+                date = formaterT.parse(dateString);
+            } catch (ParseException e) {
+                try{
+                    date = formaterT.parse(dateString+getTimeZone());
+                } catch (ParseException e1){
+                    throw new ParseException(e1.getMessage(), 1);
+                }
+            }
+        }
+        else{
+            try {
+                date = formater.parse(dateString);
+            } catch (ParseException e) {
+                try{
+                    date = formater.parse(dateString+getTimeZone());
+                } catch (ParseException e1){
+                    throw new ParseException(e1.getMessage(), 1);
+                }
+            }
+        }
+        /*
+            Date date = null;
+            if(dateString.contains("T")){
+                dateString = dateString.replace("T", " ");
+            }
+            SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
+            //SimpleDateFormat formaterZone = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZ");
+            
+            try {
+                date = formater.parse(dateString);
+            } catch (ParseException e) {
+                date = formater.parse(dateString+getTimeZone());
+            }
+        */
+        return date;
+    }
+    
+    
     /**
      * 
      * @param request
@@ -261,13 +261,13 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
         return inserted;
     }
 
-	/**
-	 * Method insert new position in database
-	 * @param request HTTP request with parameters
-	 * @return true if new position was successfully inserted, false elsewhere
-	 * @throws SQLException while parsing request
-	 */
-	protected boolean insPosition(HttpServletRequest request) throws SQLException {
+    /**
+     * Method insert new position in database
+     * @param request HTTP request with parameters
+     * @return true if new position was successfully inserted, false elsewhere
+     * @throws SQLException while parsing request
+     */
+    protected boolean insPosition(HttpServletRequest request) throws SQLException {
         boolean inserted = false;
         /**
          * Mandatory lat and lon
@@ -320,14 +320,14 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
             inserted = DatabaseFeedOperation.insertPosition(unit_id, lat, lon, alt, time, speed);
         }
         return inserted;
-	}
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see javax.servlet.GenericServlet#init()
-	 */
-	public void init() throws ServletException {
+    /*
+     * (non-Javadoc)
+     * 
+     * @see javax.servlet.GenericServlet#init()
+     */
+    public void init() throws ServletException {
         String propFile = getServletContext().getRealPath("WEB-INF/database.properties");
         Properties prop = new Properties();
         try {
@@ -371,35 +371,35 @@ public class FeederServlet extends javax.servlet.http.HttpServlet implements jav
             logger.log(Level.SEVERE, e.getMessage(), e);
         }
         super.init();
-	}
-	/**
-	 * Method processes insertAlertEvent request
-	 * @param request - HTTP GET request
-	 * @throws Exception throws exception while parsing time stamp 
-	 */
-	protected boolean insAlertEvent(HttpServletRequest request) throws Exception {
-		String time = request.getParameter(ServiceParameters.DATE);
-		long unit_id = Long.parseLong(request.getParameter(ServiceParameters.UNIT_ID));
-		int alert_id = Integer.parseInt(request.getParameter(ServiceParameters.ALERT_ID));
+    }
+    /**
+     * Method processes insertAlertEvent request
+     * @param request - HTTP GET request
+     * @throws Exception throws exception while parsing time stamp 
+     */
+    protected boolean insAlertEvent(HttpServletRequest request) throws Exception {
+        String time = request.getParameter(ServiceParameters.DATE);
+        long unit_id = Long.parseLong(request.getParameter(ServiceParameters.UNIT_ID));
+        int alert_id = Integer.parseInt(request.getParameter(ServiceParameters.ALERT_ID));
 
-		AlertUtil aUtil = new AlertUtil();
-		List<AlertEvent> eventList = aUtil.getUnsolvingAlertEvent(unit_id, alert_id);
+        AlertUtil aUtil = new AlertUtil();
+        List<AlertEvent> eventList = aUtil.getUnsolvingAlertEvent(unit_id, alert_id);
 
-		boolean notOlderEvent = eventList.isEmpty();
-		if (notOlderEvent == true) {		
-			Date date = parse(time);// "2008-01-02 12:00:00");
-			DatabaseFeedOperation.insertAlertEvent(date, unit_id, alert_id);
-		}
-		return notOlderEvent;
-	}
+        boolean notOlderEvent = eventList.isEmpty();
+        if (notOlderEvent == true) {        
+            Date date = parse(time);// "2008-01-02 12:00:00");
+            DatabaseFeedOperation.insertAlertEvent(date, unit_id, alert_id);
+        }
+        return notOlderEvent;
+    }
 
-	/**
-	 * Method processes insert solving parameter request
-	 * @param request HTTP get request
-	 * @throws Exception while parsing alert_event_id
-	 */
-	protected void insSolvingAlertEvent(HttpServletRequest request)	throws Exception {
-		int event_id = Integer.parseInt(request.getParameter(ServiceParameters.ALERT_EVENT_ID));
-		DatabaseFeedOperation.solvingAlertEvent(event_id);
-	}
+    /**
+     * Method processes insert solving parameter request
+     * @param request HTTP get request
+     * @throws Exception while parsing alert_event_id
+     */
+    protected void insSolvingAlertEvent(HttpServletRequest request)    throws Exception {
+        int event_id = Integer.parseInt(request.getParameter(ServiceParameters.ALERT_EVENT_ID));
+        DatabaseFeedOperation.solvingAlertEvent(event_id);
+    }
 }

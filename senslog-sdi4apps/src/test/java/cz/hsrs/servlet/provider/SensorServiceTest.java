@@ -16,6 +16,7 @@ import org.mortbay.util.ajax.JSON;
 import cz.hsrs.db.util.DBHelper;
 import cz.hsrs.db.util.SensorUtilTest;
 import cz.hsrs.main.Start;
+import cz.hsrs.servlet.feeder.ServiceParameters;
 
 public class SensorServiceTest {
 
@@ -36,7 +37,7 @@ public class SensorServiceTest {
 	public void testGetSensors() throws Exception {
 		URL result = new URL(
 				ServletTestHelper.APP_URL+"SensorService?Operation=" +
-				SensorService.GET_SENSORS +
+				ServiceParameters.GET_SENSORS +
 				"&unit_id=" +
 				111);			
 		simpleJsonTester(result.openStream(),"sensorId",111);
@@ -47,7 +48,7 @@ public class SensorServiceTest {
 	
 		URL result = new URL(
 				ServletTestHelper.APP_URL+"SensorService?Operation=" +
-				SensorService.GET_OBSERVATIONS +
+				ServiceParameters.GET_OBSERVATIONS +
 				"&unit_id=" +
 				111 + "&sensor_id="+111 );			
 		simpleJsonTester(result.openStream(), "value" ,1);		
@@ -59,7 +60,7 @@ public class SensorServiceTest {
 	
 		URL result = new URL(
 				ServletTestHelper.APP_URL+"SensorService?Operation=" +
-				SensorService.GET_OBSERVATIONS +
+				ServiceParameters.GET_OBSERVATIONS +
 				"&unit_id=" +
 				111 + "&sensor_id="+111+ "&from="+ dateBeforeObs +"&to="+dateAfterObs  );			
 		simpleJsonTester(result.openStream(), "value" ,1);
@@ -71,7 +72,7 @@ public class SensorServiceTest {
 	
 		URL result = new URL(
 				ServletTestHelper.APP_URL+"SensorService?Operation=" +
-				SensorService.GET_OBSERVATIONS +
+				ServiceParameters.GET_OBSERVATIONS +
 				"&unit_id=" +
 				111 + "&sensor_id="+111+ "&from="+ dateBeforeObs +"&to="+dateAfterObs+"&trunc=day" );			
 		simpleJsonTester(result.openStream(), "value" ,2);

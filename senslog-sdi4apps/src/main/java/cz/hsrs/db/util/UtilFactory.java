@@ -12,6 +12,7 @@ public class UtilFactory {
 	public GroupUtil groupUtil;
 	public SensorUtil sensorUtil;
 	public AlertUtil alertUtil;
+	public AnalystUtil analystUtil;
 	public ManagementUtil manUtil;
 	
 	public UtilFactory() {
@@ -21,6 +22,7 @@ public class UtilFactory {
 		groupUtil= new GroupUtil();
 		sensorUtil= new SensorUtil();
 		alertUtil = new AlertUtil();
+		analystUtil = new AnalystUtil();
 		manUtil = new ManagementUtil();
 	}
 }

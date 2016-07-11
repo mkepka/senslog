@@ -109,8 +109,8 @@ public class UnitUtilTest {
 			String iUnit2Holder = "UPDATE units SET holder_id = "+holder_id+" WHERE unit_id = "+unit_id;
 			stmt.executeUpdate(iUnit2Holder);
 			
-			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01+0100"), unit_id, sensor1_id, 20);
-			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01+0100"), unit_id, sensor2_id, 20);
+			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01+0100"), unit_id, sensor1_id, 20.0);
+			DatabaseFeedOperation.insertObservation(format.parse("2001-07-15 10:01+0100"), unit_id, sensor2_id, 20.0);
 		 
 	}
 	

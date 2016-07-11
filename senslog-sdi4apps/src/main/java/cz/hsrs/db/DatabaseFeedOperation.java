@@ -35,7 +35,7 @@ public class DatabaseFeedOperation {
      * @return true if observations was successfully inserted, false if it wasn't
      * @throws SQLException
      */
-    public static synchronized boolean insertObservation(Date date, long unit_id, long sensor_id, double value) throws SQLException {
+    public static synchronized boolean insertObservation(Date date, long unit_id, long sensor_id, Double value) throws SQLException {
         Observation o = new Observation(date, value, sensor_id, unit_id);
         boolean inserted = false;
         if (sensor_id == TrackIgnitionSolver.IGNITION_SENSOR_ID) {
