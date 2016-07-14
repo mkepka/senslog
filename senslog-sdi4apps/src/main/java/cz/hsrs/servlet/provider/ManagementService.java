@@ -6,8 +6,8 @@ package cz.hsrs.servlet.provider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 
-import javax.naming.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,10 +21,10 @@ import net.sf.json.util.CycleDetectionStrategy;
 
 import org.mortbay.jetty.HttpHeaders;
 
+import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.model.insert.UnitInsert;
 import cz.hsrs.db.util.UtilFactory;
 import cz.hsrs.servlet.feeder.ServiceParameters;
-import cz.hsrs.servlet.security.LoginUser;
 
 /**
  * @author mkepka
@@ -59,15 +59,34 @@ public class ManagementService extends DBServlet{
     }
     
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String user="";
+        //String user="";
         
-        /** standard authentication */
+        /** standard authentication *//*
         LoginUser loggedUser = null; 
         try {
             loggedUser = getAuthenticatedLoginUser(request);
             user = loggedUser.getUserName();
         } catch (AuthenticationException e1) {
             throw new ServletException("Authentication failure for request "+ request.getQueryString());
+        }
+        */
+        /** For SDI4Apps purpose only temporary */
+        RequestParameters params = new RequestParameters(request);
+        String user = params.getUSER();
+        if(user == null){
+            throw new ServletException("Authentication failure, no user specified for request: "+ request.getQueryString());
+        }
+        else{
+            try {
+                String testLang = db.userUtil.getUserLanguage(user);
+                if(testLang.isEmpty()){
+                    throw new ServletException("Authentication failure for request "+ request.getQueryString());
+                }
+            } catch (SQLException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            } catch (NoItemFoundException e1) {
+                throw new ServletException("Authentication failure for request "+ request.getQueryString());
+            }
         }
         
         /** Setting response headers */
@@ -124,6 +143,27 @@ public class ManagementService extends DBServlet{
             throw new Exception(e.getMessage()); 
         } catch (JSONException e){
             throw new JSONException(e.getMessage());
+        }
+    }
+    
+    /**
+     * Request Parameter subclass
+     * Parses parameter from the request
+     * @author mkepka
+     *
+     */
+    class RequestParameters {
+        private String USER;
+        
+        RequestParameters(HttpServletRequest request) throws NullPointerException{
+            Object userO = request.getParameter("user");
+            if(userO != null){
+                USER = userO.toString();
+            }
+        }
+        
+        public String getUSER() {
+            return USER;
         }
     }
 }

@@ -18,11 +18,7 @@ import cz.hsrs.servlet.feeder.ServiceParameters;
 
 public class SensorService extends DBServlet {
     
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
-
     private UtilFactory db;
 
     public void init() throws ServletException {
@@ -168,7 +164,8 @@ public class SensorService extends DBServlet {
     }
 
     /**
-     * 
+     * Request Parameter subclass
+     * Parses parameter from the request
      * @author mkepka
      *
      */

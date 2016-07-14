@@ -486,6 +486,7 @@ public class SensorUtil extends TrackUtil {
         String query = "SELECT time_stamp, gid, observed_value, o.sensor_id, o.unit_id"
                     + " FROM units_to_sensors uts"
                     + " LEFT JOIN observations o ON uts.last_obs = o.time_stamp"
+                    + " AND uts.unit_id = o.unit_id"
                     + " WHERE uts.unit_id = " + unitId
                     + " AND uts.sensor_id = o.sensor_id;";
         ResultSet res = stmt.executeQuery(query);
