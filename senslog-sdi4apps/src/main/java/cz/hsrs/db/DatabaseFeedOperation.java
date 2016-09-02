@@ -89,18 +89,18 @@ public class DatabaseFeedOperation {
      * @throws SQLException
      */
     public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, Date date, double speed) throws SQLException {
-    	/**
-    	 * zde se ztrati alt!
-    	 */
-    	boolean useTracks = true;
-    	boolean inserted = false;
-    	
+        /**
+         * zde se ztrati alt!
+         */
+        boolean useTracks = true;
+        boolean inserted = false;
+        
         UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
         if(useTracks){
-        	inserted = solve(p);
+            inserted = solve(p);
         }
         else{
-        	inserted = p.insertToDb();
+            inserted = p.insertToDb();
         }
         checkAlertQueries(p);
         return inserted;
@@ -119,15 +119,15 @@ public class DatabaseFeedOperation {
      * @throws SQLException
      */
     public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, double dop, Date date, double speed) throws SQLException {
-    	boolean useTracks = true;
-    	boolean inserted = false;
-    	
-    	UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
+        boolean useTracks = true;
+        boolean inserted = false;
+        
+        UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
         if (useTracks){
-        	inserted = solve(p);
+            inserted = solve(p);
         }
         else{
-        	inserted = p.insertToDb();
+            inserted = p.insertToDb();
         }
         checkAlertQueries(p);
         return inserted;

@@ -143,6 +143,27 @@
         <url-pattern>/ManagementService</url-pattern>
     </servlet-mapping>
     
+    <servlet>
+      <servlet-name>Jersey REST Service</servlet-name>
+      <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+      <init-param>
+        <param-name>com.sun.jersey.config.property.packages</param-name>
+        <param-value>cz.hsrs.rest</param-value>
+      </init-param>
+<!--     <init-param> -->
+<!--       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name> -->
+<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter</param-value> -->
+<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter;cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
+<!--       <param-value>cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
+<!--     </init-param> -->
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  
+  <servlet-mapping>
+    <servlet-name>Jersey REST Service</servlet-name>
+    <url-pattern>/rest/*</url-pattern>
+  </servlet-mapping>
+  
 
     <init-param>
         <param-name>development</param-name>
@@ -156,6 +177,11 @@
     <listener>
         <description>sessionListener</description>
         <listener-class>cz.hsrs.servlet.security.SessionListener</listener-class>
+    </listener>
+    
+    <listener>
+        <description>servletListener</description>
+        <listener-class>cz.hsrs.rest.SCListener</listener-class>
     </listener>
 
     <session-config>

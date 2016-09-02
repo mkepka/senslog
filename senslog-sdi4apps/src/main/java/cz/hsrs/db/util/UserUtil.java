@@ -33,6 +33,24 @@ public class UserUtil extends GroupUtil {
         return SQLExecutor.executeUpdate(query);
     }
     
+    /**
+     * Gets userId by given user name
+     * @param userName
+     * @return userId as integer
+     * @throws NoItemFoundException 
+     * @throws SQLException 
+     */
+    public int getUserId(String userName) throws NoItemFoundException, SQLException{
+    	String query = "SELECT user_id FROM system_users WHERE user_name = '"+userName+"';";
+    	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+    	if(res.next()){
+    		return res.getInt(1);
+    	}
+    	else{
+    		throw new NoItemFoundException("User with given " + userName + " was not found.");
+    	}
+    }
+    
     public boolean getAudio(String user_name) throws SQLException, NoItemFoundException {
         String select = "SELECT audio FROM system_users WHERE user_name = '"+user_name+"'";
         ResultSet res = stmt.executeQuery(select);

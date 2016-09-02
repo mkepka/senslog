@@ -1,5 +1,7 @@
 package cz.hsrs.db.pool;
 
+import java.io.InputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -80,8 +82,8 @@ public class SQLExecutor {
         UnitsTracks_table = prop.getProperty("UnitsTracks_table");
         UnitsLastPositions_table = prop.getProperty("UnitsLastPositions_table");
         Brand_picture = prop.getProperty("Brand_picture");
-        Last_value = Boolean.parseBoolean(prop.getProperty("Last_value"));
-        Vgi_observation = Boolean.parseBoolean(prop.getProperty("Vgi_observation"));
+        Last_value = Boolean.parseBoolean(prop.getProperty("Last_value_enabled"));
+        Vgi_observation = Boolean.parseBoolean(prop.getProperty("Vgi_observation_enabled"));
     }
 
     /**
@@ -115,8 +117,7 @@ public class SQLExecutor {
      *         or (2) 0 for SQL statements that return nothing
      * @throws SQLException
      */
-    public static synchronized int executeUpdate(String sql)
-            throws SQLException {
+    public static synchronized int executeUpdate(String sql) throws SQLException {
         PooledConnection con = mycp.getPooledConnection();
         int rs;
         Statement st= null;
@@ -129,6 +130,21 @@ public class SQLExecutor {
             throw new SQLException(e);
         }
         return rs;
+    }
+    
+    /**
+     * Method insert row to table with one column with "bytea" 
+     * @param sql PreparedStatement to insert row with one ? parameter to insert InputStream
+     * @param is InputStream with file
+     * @param fileSize size of file in InputStream
+     * @throws SQLException Throws SQLException if an exception occurs during inserting
+     */
+    public static synchronized void insertStream(String sql, InputStream is, long fileSize) throws SQLException {
+        PooledConnection con = mycp.getPooledConnection();
+        PreparedStatement  ps = con.getConnection().prepareStatement(sql);
+        ps.setBinaryStream(1, is, (int)fileSize);
+        ps.execute();
+        con.release();
     }
     
     public static void close() {
@@ -178,5 +194,21 @@ public class SQLExecutor {
      */
     public static String getBrand_picture_name(){
         return Brand_picture;
+    }
+    
+    /**
+     * Method returns boolean if are enabled last values of observations
+     * @return true if last values are enabled, false if they are disabled
+     */
+    public static Boolean isLastValueEnabled(){
+        return Last_value;
+    }
+    
+    /**
+     * Method returns boolean if are enabled VGI observations
+     * @return true if VGI observations are enabled, false if they are disabled
+     */
+    public static Boolean isVgiObservationsEnabled(){
+        return Vgi_observation;
     }
 }
