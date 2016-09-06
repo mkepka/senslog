@@ -3,10 +3,10 @@
     <label>Testing form</label>
   </head>
   <body>
-    <form action="http://localhost:8080/rest/vgi/insobs" method="post" enctype="multipart/form-data">
-      <p>Timestamp: <input type="text" name="timestamp" value="2016-09-02 10:16:00+0200">
+    <!-- <form action="http://portal.sdi4apps.eu/SensLog-VGI/rest/vgi/insobs" method="post" enctype="multipart/form-data"> -->
+    <form action="/rest/vgi/insobs" method="post" enctype="multipart/form-data">
+      <p>Timestamp: <input type="text" name="timestamp" value="2016-09-06 12:16:00+0200">
       <p>Category: <input type="text" name="category" value="999">
-      <p>ThemaClass: <input type="text" name="themaClass" value="">
       <p>Description: <input type="text" name="description" value="default description">
       <p>Attributes: <input type="text" name="attributes" value="">
       <p>Dataset: <input type="text" name="dataset" value="999">

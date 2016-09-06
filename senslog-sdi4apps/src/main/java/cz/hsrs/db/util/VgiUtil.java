@@ -12,10 +12,14 @@ import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
+import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.pool.SQLExecutor;
+import cz.hsrs.rest.beans.VgiObservationBean;
 
 public class VgiUtil {
     
@@ -68,7 +72,6 @@ public class VgiUtil {
      * 
      * @param timestamp - Time stamp when observation was recorded - mandatory
      * @param categoryId - Id of category - mandatory
-     * @param thematicClassId - Id of thematic class - optional
      * @param description - Detailed description of observation - optional
      * @param attributes - Other attributes in JSON format - optional
      * @param unitId - Id of device that recorded observation - mandatory
@@ -77,22 +80,16 @@ public class VgiUtil {
      * @return Id of inserted observation as integer
      * @throws SQLException
      */
-    public static int insertVgiObs(String timestamp, Integer categoryId, Integer thematicClassId, String description, String attributes,
-            long unitId, int userId, int datasetId) throws SQLException{
+    public static int insertVgiObs(String timestamp, Integer categoryId, String description, 
+            String attributes, long unitId, int userId, int datasetId) throws SQLException{
         int newId = getNextVgiObsID();
         
         StringBuffer ins = new StringBuffer();
-        ins.append("INSERT INTO vgi.observations_vgi(obs_vgi_id, time_stamp, category_id, thematic_class_id,"
+        ins.append("INSERT INTO vgi.observations_vgi(obs_vgi_id, time_stamp, category_id,"
                 + " description, attributes, dataset_id, unit_id, user_id) VALUES(");
         ins.append(newId+", ");
         ins.append("'"+timestamp+"', ");
         ins.append(categoryId+", ");
-        if(thematicClassId == null){
-            ins.append("NULL, ");
-        }
-        else{
-            ins.append(thematicClassId+", ");
-        }
         if(description == null){
             ins.append("NULL, ");
         }
@@ -102,8 +99,11 @@ public class VgiUtil {
         if(attributes == null){
             ins.append("NULL, ");
         }
+        else if(attributes != null && attributes.isEmpty()){
+            ins.append("NULL, ");
+        }
         else{
-            ins.append("'"+attributes+"', ");
+        	ins.append("'"+attributes+"', ");
         }
         ins.append(datasetId+", ");
         ins.append(unitId+", ");
@@ -142,7 +142,7 @@ public class VgiUtil {
      */
     public static void insertVgiMedia(long vgiId, InputStream media, long fileSize, String mediaType) throws SQLException{
         String query = "INSERT INTO vgi.observations_vgi_media(obs_vgi_id, observed_media, media_datatype)"
-        		+ " VALUES("+vgiId+", ?, '"+mediaType+"');";
+                + " VALUES("+vgiId+", ?, '"+mediaType+"');";
         SQLExecutor.insertStream(query, media, fileSize);
     }
     
@@ -315,6 +315,70 @@ public class VgiUtil {
             }
         } catch(SQLException e){
             throw new SQLException("Observation can't get new ID!");
+        }
+    }
+    
+    /**
+     * Method to get all VGI observations associated to given user
+     * @param userId - ID of user
+     * @return List of VGI observations 
+     * @throws SQLException
+     */
+    public List<VgiObservation> getVgiObservationsByUser(int userId) throws SQLException{
+        try{
+            String query = "SELECT obs_vgi_id, gid, time_stamp, category_id,"
+                    + " description, attributes, dataset_id, unit_id, user_id,"
+                    + " time_received, media_count"
+                    + " FROM vgi.observations_vgi WHERE user_id = "+userId+";";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
+            while(res.next()){
+                VgiObservation obs = new VgiObservation(
+                        res.getInt("obs_vgi_id"),
+                        res.getInt("gid"),
+                        res.getString("time_stamp"),
+                        res.getInt("category_id"),
+                        res.getString("description"),
+                        res.getString("attributes"),
+                        res.getInt("dataset_id"),
+                        res.getLong("unit_id"),
+                        res.getInt("user_id"),
+                        res.getString("time_received"),
+                        res.getInt("media_count"));
+                vgiObsList.add(obs);
+            }
+            return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    public List<VgiObservationBean> getVgiObservationBeansByUser(int userId) throws SQLException{
+        try{
+            String query = "SELECT obs_vgi_id, gid, time_stamp, category_id,"
+                    + " description, attributes, dataset_id, unit_id, user_id,"
+                    + " time_received, media_count"
+                    + " FROM vgi.observations_vgi WHERE user_id = "+userId+";";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<VgiObservationBean> vgiObsList = new LinkedList<VgiObservationBean>();
+            while(res.next()){
+            	VgiObservationBean obs = new VgiObservationBean(
+                        res.getInt("obs_vgi_id"),
+                        res.getInt("gid"),
+                        res.getString("time_stamp"),
+                        res.getInt("category_id"),
+                        res.getString("description"),
+                        res.getString("attributes"),
+                        res.getInt("dataset_id"),
+                        res.getLong("unit_id"),
+                        res.getInt("user_id"),
+                        res.getString("time_received"),
+                        res.getInt("media_count"));
+                vgiObsList.add(obs);
+            }
+            return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
         }
     }
 }
