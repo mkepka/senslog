@@ -9,12 +9,16 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 import cz.hsrs.db.DatabaseFeedOperation;
+import cz.hsrs.db.model.NoItemFoundException;
+import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.util.UserUtil;
 import cz.hsrs.db.util.VgiUtil;
+import cz.hsrs.rest.beans.VgiObservationBean;
 
 /**
  * Utility class with methods for inserting new POI
@@ -26,9 +30,11 @@ public class RestUtil {
     private static final int THUMBNAIL_RATIO = 8;
     private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZZ");
     private UserUtil userUt;
+    private VgiUtil vUtil;
     
     public RestUtil(){
         this.userUt = new UserUtil();
+        this.vUtil = new VgiUtil();
     }
     
     public String testPoi(String testValue){
@@ -138,7 +144,6 @@ public class RestUtil {
      * 
      * @param timestampValue
      * @param catValue
-     * @param themaClassValue
      * @param descValue
      * @param attsValue
      * @param unitId
@@ -151,9 +156,8 @@ public class RestUtil {
      * @throws NumberFormatException
      * @throws Exception
      */
-    public int processVgiObs(String timestampValue, Integer catValue, Integer themaClassValue, String descValue, String attsValue,
+    public int processVgiObs(String timestampValue, Integer catValue, String descValue, String attsValue,
             Long unitId, String userName, Integer datasetId, String lonValue, String latValue, InputStream fileInStream) throws Exception{
-        //boolean isPos = false;
         int obsId = 0;
         
         // get userId from userName
@@ -174,7 +178,6 @@ public class RestUtil {
                     obsId = VgiUtil.insertVgiObs(
                             timestampValue, 
                             catValue, 
-                            themaClassValue, 
                             descValue, 
                             attsValue, 
                             unitId, 
@@ -187,7 +190,9 @@ public class RestUtil {
             }
         }
         if(fileInStream != null){
-            insertImage(fileInStream, 0, obsId);
+        	if(fileInStream.available() > 0){
+        		insertImage(fileInStream, 0, obsId);
+        	}
         }
         return obsId;
     }
@@ -204,24 +209,28 @@ public class RestUtil {
         if(fileInStream != null){
             try{
                 BufferedImage photo = ImageIO.read(fileInStream);
-                
-                // rotate if necessary
-                BufferedImage rotatedImage;
-                if(rotationAng != 0){
-                    rotatedImage = VgiUtil.rotate(photo, rotationAng);
+                if(photo != null){
+                    // rotate if necessary
+                    BufferedImage rotatedImage;
+                    if(rotationAng != 0){
+                        rotatedImage = VgiUtil.rotate(photo, rotationAng);
+                    }
+                    else{
+                        rotatedImage = photo;
+                    }
+                    //write to database picture
+                    ByteArrayOutputStream baosRot = new ByteArrayOutputStream();
+                    ImageIO.write(rotatedImage, "png", baosRot);
+                    byte[] rotArr = baosRot.toByteArray();
+                    InputStream isRot = new ByteArrayInputStream(rotArr);
+                    VgiUtil.insertVgiMedia(poiId, isRot, rotArr.length, "image/png");
+                    return true;
                 }
                 else{
-                    rotatedImage = photo;
+                	throw new Exception("Image was empty!");
                 }
-                //write to database picture
-                ByteArrayOutputStream baosRot = new ByteArrayOutputStream();
-                ImageIO.write(rotatedImage, "png", baosRot);
-                byte[] rotArr = baosRot.toByteArray();
-                InputStream isRot = new ByteArrayInputStream(rotArr);
-                VgiUtil.insertVgiMedia(poiId, isRot, rotArr.length, "image/png");
-                return true;
             } catch(IOException e){
-                throw new Exception(e.getMessage());
+            	throw new Exception(e.getMessage());
             } catch (SQLException e) {
                 throw new Exception(e.getMessage());
             }
@@ -229,5 +238,31 @@ public class RestUtil {
         else{
             throw new Exception("File must be given!");
         }
+    }
+    
+    /**
+     * 
+     * @param userName
+     * @return
+     * @throws NoItemFoundException
+     * @throws SQLException
+     */
+    public List<VgiObservationBean> getVgiObservationBeansByUser(String userName) throws NoItemFoundException, SQLException{
+    	int userId = userUt.getUserId(userName);
+    	List<VgiObservationBean> obsList = vUtil.getVgiObservationBeansByUser(userId);
+    	return obsList;
+    }
+    
+    /**
+     * 
+     * @param userName
+     * @return
+     * @throws NoItemFoundException
+     * @throws SQLException
+     */
+    public List<VgiObservation> getVgiObservationsByUser(String userName) throws NoItemFoundException, SQLException{
+    	int userId = userUt.getUserId(userName);
+    	List<VgiObservation> obsList = vUtil.getVgiObservationsByUser(userId);
+    	return obsList;
     }
 }
