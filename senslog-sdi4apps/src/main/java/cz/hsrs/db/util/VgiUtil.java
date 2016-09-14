@@ -15,11 +15,14 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+import net.sf.json.JSONObject;
+
 import org.apache.commons.io.IOUtils;
 
+import cz.hsrs.db.model.vgi.VgiCategory;
+import cz.hsrs.db.model.vgi.VgiDataset;
 import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.pool.SQLExecutor;
-import cz.hsrs.rest.beans.VgiObservationBean;
 
 public class VgiUtil {
     
@@ -103,7 +106,7 @@ public class VgiUtil {
             ins.append("NULL, ");
         }
         else{
-        	ins.append("'"+attributes+"', ");
+            ins.append("'"+attributes+"', ");
         }
         ins.append(datasetId+", ");
         ins.append(unitId+", ");
@@ -328,8 +331,10 @@ public class VgiUtil {
         try{
             String query = "SELECT obs_vgi_id, gid, time_stamp, category_id,"
                     + " description, attributes, dataset_id, unit_id, user_id,"
-                    + " time_received, media_count"
-                    + " FROM vgi.observations_vgi WHERE user_id = "+userId+";";
+                    + " time_received, media_count, ST_X(the_geom), ST_Y(the_geom)"
+                    + " FROM vgi.observations_vgi ov, units_positions up"
+                    + " WHERE user_id = "+userId+""
+                    + " AND ov.gid = up.gid;";
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
             while(res.next()){
@@ -353,30 +358,94 @@ public class VgiUtil {
         }
     }
     
-    public List<VgiObservationBean> getVgiObservationBeansByUser(int userId) throws SQLException{
+    /**
+     * 
+     * @param userId
+     * @return
+     * @throws SQLException
+     */
+    public List<JSONObject> getVgiObservationsByUserAsJSON(int userId) throws SQLException{
         try{
-            String query = "SELECT obs_vgi_id, gid, time_stamp, category_id,"
-                    + " description, attributes, dataset_id, unit_id, user_id,"
-                    + " time_received, media_count"
-                    + " FROM vgi.observations_vgi WHERE user_id = "+userId+";";
+            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                    + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                    + " FROM vgi.observations_vgi ov, units_positions up"
+                    + " WHERE ov.user_id = "+userId+""
+                    + " AND ov.gid = up.gid;";
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<VgiObservationBean> vgiObsList = new LinkedList<VgiObservationBean>();
+            LinkedList<JSONObject> vgiObsList = new LinkedList<JSONObject>();
             while(res.next()){
-            	VgiObservationBean obs = new VgiObservationBean(
-                        res.getInt("obs_vgi_id"),
-                        res.getInt("gid"),
-                        res.getString("time_stamp"),
-                        res.getInt("category_id"),
-                        res.getString("description"),
-                        res.getString("attributes"),
-                        res.getInt("dataset_id"),
-                        res.getLong("unit_id"),
-                        res.getInt("user_id"),
-                        res.getString("time_received"),
-                        res.getInt("media_count"));
-                vgiObsList.add(obs);
+                // feature
+                JSONObject feature = new JSONObject();
+                feature.put("type", "Feature");
+                feature.put("geometry", res.getString("st_asgeojson"));
+                // properties
+                JSONObject properties = new JSONObject();
+                properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
+                properties.put("category_id", res.getInt("category_id"));
+                properties.put("dataset_id", res.getInt("dataset_id"));
+                properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
+                properties.put("media_count", res.getInt("media_count"));
+                properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
+                properties.put("time_stamp", res.getString("time_stamp"));
+                properties.put("unit_id", res.getLong("unit_id"));
+                feature.put("properties", properties);
+                
+                vgiObsList.add(feature);
             }
             return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
+     * 
+     * @return
+     * @throws SQLException
+     */
+    public List<VgiCategory> getCategoriesList() throws SQLException{
+        try{
+            String query = "SELECT category_id, category_name, description, parent_id, category_level, lft, rgt"
+                    + " FROM vgi.observations_vgi_category ORDER BY category_id;";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<VgiCategory> catList = new LinkedList<VgiCategory>();
+            while(res.next()){
+                VgiCategory cat = new VgiCategory(
+                        res.getInt("category_id"),
+                        res.getString("category_name"),
+                        res.getString("description"),
+                        res.getInt("parent_id"),
+                        res.getInt("category_level"),
+                        res.getInt("lft"), res.getInt("rgt"));
+                catList.add(cat);
+            }
+            return catList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
+     * 
+     * @param userId
+     * @return
+     * @throws SQLException
+     */
+    public List<VgiDataset> getDatasetsList(int userId) throws SQLException{
+        try{
+            String query = "SELECT dataset_id, dataset_name, description"
+                    + " FROM vgi.vgi_datasets ORDER BY dataset_id;";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<VgiDataset> datList = new LinkedList<VgiDataset>();
+            while(res.next()){
+                VgiDataset dat = new VgiDataset(
+                        res.getInt("dataset_id"), 
+                        res.getString("dataset_name"),
+                        res.getString("description"));
+                datList.add(dat);
+            }
+            return datList;
         } catch(SQLException e){
             throw new SQLException(e.getMessage());
         }

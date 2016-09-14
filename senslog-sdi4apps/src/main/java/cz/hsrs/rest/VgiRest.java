@@ -10,7 +10,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -19,10 +18,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import net.sf.json.JSONObject;
+
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import cz.hsrs.db.model.NoItemFoundException;
+import cz.hsrs.db.model.vgi.VgiCategory;
+import cz.hsrs.db.model.vgi.VgiDataset;
 import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.main.ApplicationParams;
 import cz.hsrs.rest.util.BasicAuth;
@@ -162,20 +165,30 @@ public class VgiRest {
     }
     
     /**
-     * Method processes service to get all VGIObservations associated to given user 
-     * @param userName - username of given user
-     * @return List of VGIObservations
+     * Method processes service to get all VGIObservations associated to given user
+     * @param userName - username of given user (mandatory)
+     * @param format - format of the response (optional), geojson or json
+     * @return
      */
     @Path("/observations/select")
     @GET
-    public Response selectVgiObservations(@QueryParam("user_name") String userName){
+    public Response selectVgiObservations(@QueryParam("user_name") String userName, @QueryParam("format") String format){
         RestUtil rUtil = new RestUtil();
         try{
             if(userName != null){
-                List<VgiObservation> obsList = rUtil.getVgiObservationsByUser(userName);
-                return Response.ok(obsList)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                        .build();
+                if(format.equalsIgnoreCase("geojson")){
+                    JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName);
+                    return Response.ok(featureColl, MediaType.APPLICATION_JSON)
+                            .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                            .build();
+                } 
+                else{
+                    List<VgiObservation> obsList = rUtil.getVgiObservationsByUser(userName);
+                    return Response.ok(obsList)
+                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                            .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                            .build();
+                }
             }
             else{
                 return Response.status(Status.BAD_REQUEST)
@@ -197,14 +210,57 @@ public class VgiRest {
         }
     }
     
-    /*
-    @Path("/observations/select/{user_name}")
+    /**
+     * 
+     * @param userName
+     * @return
+     * @throws NoItemFoundException
+     * @throws SQLException
+     */
+    @Path("/observations/select-geojson/")
     @GET
-    @Produces("application/json")
-    public List<VgiObservationBean> selectVgiObservations(@PathParam("user_name") String userName) throws NoItemFoundException, SQLException{
+    public Response selectVgiObservationsAsGeoJson(@QueryParam("user_name") String userName) throws NoItemFoundException, SQLException{
         RestUtil rUtil = new RestUtil();
-        List<VgiObservationBean> obsList = rUtil.getVgiObservationsByUser(userName);
-        return obsList;
+        JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName);
+        
+        return Response.ok(featureColl, MediaType.APPLICATION_JSON)
+                .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                .build();
     }
-    */
+    
+    @Path("/category/select")
+    @GET
+    public Response selectCategories(){
+        RestUtil rUtil = new RestUtil();
+        try{
+            List<VgiCategory> catList = rUtil.getVgiCategories();
+            return Response.ok(catList)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                    .build();
+        } catch(SQLException e){
+            return Response.serverError().entity(e.getMessage())
+                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                    .build();
+        }
+    }
+    
+    @Path("/dataset/select")
+    @GET
+    public Response selectDatasets(){
+        RestUtil rUtil = new RestUtil();
+        try{
+            List<VgiDataset> dataList = rUtil.getVgiDatasets("tester");
+            return Response.ok(dataList)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                    .build();
+        } catch(SQLException e){
+            return Response.serverError().entity(e.getMessage())
+                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                    .build();
+        }
+    }
 }
