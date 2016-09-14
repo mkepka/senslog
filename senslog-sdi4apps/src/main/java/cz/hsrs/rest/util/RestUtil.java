@@ -13,12 +13,16 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONObject;
 import cz.hsrs.db.DatabaseFeedOperation;
 import cz.hsrs.db.model.NoItemFoundException;
+import cz.hsrs.db.model.vgi.VgiCategory;
+import cz.hsrs.db.model.vgi.VgiDataset;
 import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.util.UserUtil;
 import cz.hsrs.db.util.VgiUtil;
-import cz.hsrs.rest.beans.VgiObservationBean;
 
 /**
  * Utility class with methods for inserting new POI
@@ -170,7 +174,7 @@ public class RestUtil {
         else{
             // check of geometry
             if(lonValue != null && latValue != null && timestampValue != null){
-            	Date posDate = format.parse(timestampValue);
+                Date posDate = format.parse(timestampValue);
                 DatabaseFeedOperation.insertPosition(unitId.longValue(), Double.valueOf(latValue), Double.valueOf(lonValue), posDate);
                 
                 // ins observation
@@ -190,9 +194,13 @@ public class RestUtil {
             }
         }
         if(fileInStream != null){
-        	if(fileInStream.available() > 0){
-        		insertImage(fileInStream, 0, obsId);
-        	}
+            try{
+                insertImage(fileInStream, 0, obsId);
+            } catch(Exception e){
+                if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
+                    throw new Exception (e.getMessage());
+                }
+            }
         }
         return obsId;
     }
@@ -227,10 +235,10 @@ public class RestUtil {
                     return true;
                 }
                 else{
-                	throw new Exception("Image was empty!");
+                    throw new Exception("Any media was given!");
                 }
             } catch(IOException e){
-            	throw new Exception(e.getMessage());
+                throw new Exception(e.getMessage());
             } catch (SQLException e) {
                 throw new Exception(e.getMessage());
             }
@@ -247,10 +255,21 @@ public class RestUtil {
      * @throws NoItemFoundException
      * @throws SQLException
      */
-    public List<VgiObservationBean> getVgiObservationBeansByUser(String userName) throws NoItemFoundException, SQLException{
-    	int userId = userUt.getUserId(userName);
-    	List<VgiObservationBean> obsList = vUtil.getVgiObservationBeansByUser(userId);
-    	return obsList;
+    public JSONObject getVgiObservationBeansByUser(String userName) throws NoItemFoundException, SQLException{
+        int userId = userUt.getUserId(userName);
+        List<JSONObject> obsList = vUtil.getVgiObservationsByUserAsJSON(userId);
+        JSONObject featureCollection = new JSONObject();
+        try {
+            // Features
+            JSONArray featureList = new JSONArray();
+            featureList.addAll(obsList);
+         // FeatureCollection
+            featureCollection.put("type", "FeatureCollection");
+            featureCollection.put("features", featureList);
+        } catch (JSONException e) {
+            throw new SQLException(e.getMessage());
+        }
+        return featureCollection;
     }
     
     /**
@@ -261,8 +280,28 @@ public class RestUtil {
      * @throws SQLException
      */
     public List<VgiObservation> getVgiObservationsByUser(String userName) throws NoItemFoundException, SQLException{
-    	int userId = userUt.getUserId(userName);
-    	List<VgiObservation> obsList = vUtil.getVgiObservationsByUser(userId);
-    	return obsList;
+        int userId = userUt.getUserId(userName);
+        List<VgiObservation> obsList = vUtil.getVgiObservationsByUser(userId);
+        return obsList;
+    }
+    
+    /**
+     * 
+     * @return
+     * @throws SQLException
+     */
+    public List<VgiCategory> getVgiCategories() throws SQLException{
+        List<VgiCategory> catList = vUtil.getCategoriesList();
+        return catList;
+    }
+    
+    public List<VgiDataset> getVgiDatasets(String userName) throws SQLException{
+        try{
+            int userId = userUt.getUserId(userName);
+            List<VgiDataset> datList = vUtil.getDatasetsList(userId);
+            return datList;
+        } catch(NoItemFoundException e){
+            throw new SQLException(e.getMessage());
+        }
     }
 }
