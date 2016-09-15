@@ -176,16 +176,16 @@ public class VgiRest {
         RestUtil rUtil = new RestUtil();
         try{
             if(userName != null){
-                if(format.equalsIgnoreCase("geojson")){
+                if(format != null && format.equalsIgnoreCase("geojson")){
                     JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName);
-                    return Response.ok(featureColl, MediaType.APPLICATION_JSON)
+                    return Response.ok(featureColl, MediaType.APPLICATION_JSON+";charset=utf-8")
                             .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                             .build();
                 } 
                 else{
                     List<VgiObservation> obsList = rUtil.getVgiObservationsByUser(userName);
                     return Response.ok(obsList)
-                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON+";charset=utf-8")
                             .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                             .build();
                 }
@@ -235,7 +235,7 @@ public class VgiRest {
         try{
             List<VgiCategory> catList = rUtil.getVgiCategories();
             return Response.ok(catList)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON+";charset=utf-8")
                     .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                     .build();
         } catch(SQLException e){
