@@ -329,11 +329,11 @@ public class VgiUtil {
      */
     public List<VgiObservation> getVgiObservationsByUser(int userId) throws SQLException{
         try{
-            String query = "SELECT obs_vgi_id, gid, time_stamp, category_id,"
-                    + " description, attributes, dataset_id, unit_id, user_id,"
-                    + " time_received, media_count, ST_X(the_geom), ST_Y(the_geom)"
+            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                    + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
                     + " FROM vgi.observations_vgi ov, units_positions up"
-                    + " WHERE user_id = "+userId+""
+                    + " WHERE ov.user_id = "+userId+""
                     + " AND ov.gid = up.gid;";
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
