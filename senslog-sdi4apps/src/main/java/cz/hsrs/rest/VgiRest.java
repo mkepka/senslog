@@ -1,7 +1,10 @@
 package cz.hsrs.rest;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.util.Date;
 import java.util.List;
 
 import javax.servlet.ServletContext;
@@ -26,7 +29,9 @@ import com.sun.jersey.multipart.FormDataParam;
 import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.model.vgi.VgiCategory;
 import cz.hsrs.db.model.vgi.VgiDataset;
+import cz.hsrs.db.model.vgi.VgiMedia;
 import cz.hsrs.db.model.vgi.VgiObservation;
+import cz.hsrs.db.util.DateUtil;
 import cz.hsrs.main.ApplicationParams;
 import cz.hsrs.rest.util.BasicAuth;
 import cz.hsrs.rest.util.RestUtil;
@@ -49,10 +54,11 @@ public class VgiRest {
      * @param request incoming servlet as HttpServletRequest
      * @return response of the servlet as String
      */
-    public String testPoi(@QueryParam("test") String testValue, @Context HttpServletRequest request){
-        RestUtil rUtil = new RestUtil();
-        String result = rUtil.testPoi(testValue);
-        return result;
+    public String testPoi(@QueryParam("test") String testValue, @Context HttpServletRequest request) throws ParseException{
+        //RestUtil rUtil = new RestUtil();
+        //String result = rUtil.testPoi(testValue);
+        Date result = DateUtil.parseTimestamp(testValue);
+        return result.toString();
     }
 
     @Path("/testload")
@@ -138,6 +144,7 @@ public class VgiRest {
     @POST
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response insertObservation(
+            @FormDataParam("obsId") Integer obsId,
             @FormDataParam("timestamp") String timestampValue,
             @FormDataParam("category") Integer catValue,
             @FormDataParam("description") String descValue,
@@ -152,11 +159,20 @@ public class VgiRest {
         RestUtil rUtil = new RestUtil();
         try {
             String userName = "tester";
-            int newObsId = rUtil.processVgiObs(timestampValue, catValue, descValue, attsValue,
-                    unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream);
-            return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
-                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .build();
+            if(obsId == null){
+                int newObsId = rUtil.processVgiObs(timestampValue, catValue, descValue, attsValue,
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream);
+                return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
+                        .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                        .build();
+            }
+            else{
+                boolean inserted = rUtil.updateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream);
+                return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
+                        .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                        .build();
+            }
         } catch (Exception e) {
             return Response.serverError().entity(e.getMessage())
                     .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
@@ -172,12 +188,13 @@ public class VgiRest {
      */
     @Path("/observations/select")
     @GET
-    public Response selectVgiObservations(@QueryParam("user_name") String userName, @QueryParam("format") String format){
+    public Response selectVgiObservations(@QueryParam("user_name") String userName, @QueryParam("format") String format, 
+            @QueryParam("fromTime") String fromTime, @QueryParam("toTime") String toTime){
         RestUtil rUtil = new RestUtil();
         try{
             if(userName != null){
                 if(format != null && format.equalsIgnoreCase("geojson")){
-                    JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName);
+                    JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName, fromTime, toTime);
                     return Response.ok(featureColl, MediaType.APPLICATION_JSON+";charset=utf-8")
                             .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                             .build();
@@ -207,21 +224,44 @@ public class VgiRest {
                     .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
                     .build();
+        } catch (ParseException e) {
+            return Response.serverError().entity(e.getMessage())
+                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                    .build();
         }
     }
     
+    /**
+     * 
+     * @param obsId
+     * @return
+     * @throws SQLException
+     */
+    @Path("/media/select")
+    @GET
+    public Response selectVgiMedia(@QueryParam("obs_id") Integer obsId) throws SQLException{
+        RestUtil rUtil = new RestUtil();
+        List<VgiMedia> media = rUtil.getVgiMedia(obsId);
+        return Response.ok(new ByteArrayInputStream(media.get(0).getObservedMedia()), media.get(0).getMediaDatatype())
+                //.header("Content-Disposition", "attachment; filename="+media.get(0).internalGetTimeReceivedMilis()+".png")
+                .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
+                .build();
+    }
     /**
      * 
      * @param userName
      * @return
      * @throws NoItemFoundException
      * @throws SQLException
+     * @throws ParseException 
      */
     @Path("/observations/select-geojson/")
     @GET
-    public Response selectVgiObservationsAsGeoJson(@QueryParam("user_name") String userName) throws NoItemFoundException, SQLException{
+    public Response selectVgiObservationsAsGeoJson(@QueryParam("user_name") String userName, 
+    		@QueryParam("fromTime") String fromTime, @QueryParam("toTime") String toTime) throws NoItemFoundException, SQLException, ParseException{
         RestUtil rUtil = new RestUtil();
-        JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName);
+        JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName, fromTime, toTime);
         
         return Response.ok(featureColl, MediaType.APPLICATION_JSON)
                 .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
