@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +20,9 @@ import cz.hsrs.db.DatabaseFeedOperation;
 import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.model.vgi.VgiCategory;
 import cz.hsrs.db.model.vgi.VgiDataset;
+import cz.hsrs.db.model.vgi.VgiMedia;
 import cz.hsrs.db.model.vgi.VgiObservation;
+import cz.hsrs.db.util.DateUtil;
 import cz.hsrs.db.util.UserUtil;
 import cz.hsrs.db.util.VgiUtil;
 
@@ -32,7 +34,7 @@ import cz.hsrs.db.util.VgiUtil;
 public class RestUtil {
 
     private static final int THUMBNAIL_RATIO = 8;
-    private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZZ");
+    //private static SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZZZ");
     private UserUtil userUt;
     private VgiUtil vUtil;
     
@@ -174,13 +176,13 @@ public class RestUtil {
         else{
             // check of geometry
             if(lonValue != null && latValue != null && timestampValue != null){
-                Date posDate = format.parse(timestampValue);
+                Date posDate = DateUtil.parseTimestamp(timestampValue);
                 DatabaseFeedOperation.insertPosition(unitId.longValue(), Double.valueOf(latValue), Double.valueOf(lonValue), posDate);
                 
                 // ins observation
                 if(catValue != null && datasetId != null){
                     obsId = VgiUtil.insertVgiObs(
-                            timestampValue, 
+                            DateUtil.formatSecsTZ.format(posDate), 
                             catValue, 
                             descValue, 
                             attsValue, 
@@ -254,10 +256,28 @@ public class RestUtil {
      * @return
      * @throws NoItemFoundException
      * @throws SQLException
+     * @throws ParseException 
      */
-    public JSONObject getVgiObservationBeansByUser(String userName) throws NoItemFoundException, SQLException{
+    public JSONObject getVgiObservationBeansByUser(String userName, String fromTime, String toTime) throws NoItemFoundException, SQLException, ParseException{
         int userId = userUt.getUserId(userName);
-        List<JSONObject> obsList = vUtil.getVgiObservationsByUserAsJSON(userId);
+        String from = null;
+        String to = null;
+        if(fromTime != null){
+            Date fromDate = DateUtil.parseTimestamp(fromTime);
+            from = DateUtil.formatMiliSecsTZ.format(fromDate);
+        }
+        if(toTime == null){
+            Date toDate = DateUtil.parseTimestamp(toTime);
+            to = DateUtil.formatMiliSecsTZ.format(toDate);
+        }
+        List<JSONObject> obsList = null;
+        
+        if(from == null && to == null){
+            obsList = vUtil.getVgiObservationsByUserAsJSON(userId);
+        }
+        else{
+            obsList = vUtil.getVgiObservationsByUserByTimeAsJSON(userId, from, to);
+        }
         JSONObject featureCollection = new JSONObject();
         try {
             // Features
@@ -303,5 +323,71 @@ public class RestUtil {
         } catch(NoItemFoundException e){
             throw new SQLException(e.getMessage());
         }
+    }
+
+    /**
+     * 
+     * @param obsId
+     * @param timestampValue
+     * @param catValue
+     * @param descValue
+     * @param attsValue
+     * @param unitIdValue
+     * @param userName
+     * @param datasetIdValue
+     * @param lonValue
+     * @param latValue
+     * @param fileInStream
+     * @return
+     * @throws Exception 
+     */
+    public boolean updateVgiObs(Integer obsId, String timestampValue,
+            Integer catValue, String descValue, String attsValue,
+            Long unitId, String userName, Integer datasetId,
+            String lonValue, String latValue, InputStream fileInStream) throws Exception {
+        // get userId from userName
+        int userId = userUt.getUserId(userName);
+        boolean updated = false;
+        // check of unitId
+        if(unitId == null){
+            throw new Exception("ID of device has to be defined!");
+        }
+        else{
+            // check of geometry
+            if(lonValue != null && latValue != null && timestampValue != null){
+                Date posDate = DateUtil.parseTimestamp(timestampValue);
+                DatabaseFeedOperation.insertPosition(unitId.longValue(), Double.valueOf(latValue), Double.valueOf(lonValue), posDate);
+                
+                // ins observation
+                if(catValue != null && datasetId != null){
+                    updated = VgiUtil.updateVgiObs(
+                            obsId,
+                            DateUtil.formatSecsTZ.format(posDate), 
+                            catValue, 
+                            descValue, 
+                            attsValue, 
+                            unitId, 
+                            userId, 
+                            datasetId);
+                } 
+            }
+            else{
+                throw new Exception("Geometry of POI has to be defined!");
+            }
+        }
+        if(fileInStream != null){
+            try{
+                insertImage(fileInStream, 0, obsId);
+            } catch(Exception e){
+                if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
+                    throw new Exception (e.getMessage());
+                }
+            }
+        }
+        return updated;
+    }
+    
+    public List<VgiMedia> getVgiMedia(int obsId) throws SQLException{
+        return vUtil.getVgiMedia(obsId);
     }
 }
