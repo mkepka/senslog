@@ -138,10 +138,9 @@ public class VgiUtil {
             String attributes, long unitId, int userId, int datasetId) throws SQLException{
         
         StringBuffer ins = new StringBuffer();
-        ins.append("UPDATE vgi.observations_vgi SET(obs_vgi_id, time_stamp, category_id,"
-                + " description, attributes, dataset_id, unit_id, user_id) VALUES(");
+        ins.append("UPDATE vgi.observations_vgi SET ");
         if(timestamp != null){
-            ins.append("time_stamp = "+timestamp+", ");
+            ins.append("time_stamp = '"+timestamp+"', ");
         }
         if(categoryId != null){
             ins.append("category_id = "+categoryId+", ");
@@ -149,14 +148,14 @@ public class VgiUtil {
         if(description != null){
             ins.append("description = '"+description+"', ");
         }
-        if(attributes != null && attributes.isEmpty()){
+        if(attributes != null && !attributes.isEmpty()){
             ins.append("attributes = '"+attributes+"', ");
         }
         ins.append("dataset_id = "+datasetId+", ");
         ins.append("unit_id = "+unitId+", ");
         ins.append("user_id = "+userId+" ");
         
-        ins.append("WHERE obsId = "+obsId+";");
+        ins.append("WHERE obs_vgi_id = "+obsId+";");
         
         try{
             String query = ins.toString();

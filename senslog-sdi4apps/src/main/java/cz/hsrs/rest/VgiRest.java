@@ -144,7 +144,7 @@ public class VgiRest {
     @POST
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response insertObservation(
-            @FormDataParam("obsId") Integer obsId,
+            @FormDataParam("obs_vgi_id") Integer obsId,
             @FormDataParam("timestamp") String timestampValue,
             @FormDataParam("category") Integer catValue,
             @FormDataParam("description") String descValue,
