@@ -266,7 +266,7 @@ public class RestUtil {
             Date fromDate = DateUtil.parseTimestamp(fromTime);
             from = DateUtil.formatMiliSecsTZ.format(fromDate);
         }
-        if(toTime == null){
+        if(toTime != null){
             Date toDate = DateUtil.parseTimestamp(toTime);
             to = DateUtil.formatMiliSecsTZ.format(toDate);
         }
