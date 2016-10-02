@@ -3,11 +3,6 @@
  */
 package cz.hsrs.db.model.vgi;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import cz.hsrs.db.pool.SQLExecutor;
-
 /**
  * @author mkepka
  *
@@ -17,7 +12,7 @@ public class VgiDataset {
     private int datasetId;
     private String datasetName;
     private String description;
-    private int userId;
+    private int user_id;
     
     /**
      * Empty constructor
@@ -31,11 +26,12 @@ public class VgiDataset {
      * @param description
      * @param user_id
      */
-    public VgiDataset(int datasetId, String datasetName, String description, int user_id) {
+    public VgiDataset(int datasetId, String datasetName, String description,
+            int user_id) {
         this.datasetId = datasetId;
         this.datasetName = datasetName;
         this.description = description;
-        this.userId = user_id;
+        this.user_id = user_id;
     }
 
     /**
@@ -46,7 +42,7 @@ public class VgiDataset {
     public VgiDataset(String datasetName, String description, int user_id) {
         this.datasetName = datasetName;
         this.description = description;
-        this.userId = user_id;
+        this.user_id = user_id;
     }
 
     /**
@@ -85,7 +81,7 @@ public class VgiDataset {
      * @return the user_id
      */
     public int internalGetUser_id() {
-        return userId;
+        return user_id;
     }
 
     /* (non-Javadoc)
@@ -95,32 +91,6 @@ public class VgiDataset {
     public String toString() {
         return "VgiDataset [datasetId=" + datasetId + ", datasetName="
                 + datasetName + ", description=" + description + ", user_id="
-                + userId + "]";
-    }
-    
-    /**
-     * Method inserts new Dataset to the DB
-     * @return ID of the given dataset 
-     * @throws SQLException
-     */
-    public int insertToDB() throws SQLException{
-        try{
-            String newIdQuery = "SELECT nextval('vgi.vgi_datasets_dataset_id_seq'::regclass);";
-            ResultSet res = SQLExecutor.getInstance().executeQuery(newIdQuery);
-            int newId = 0;
-            if(res.next()){
-                newId = res.getInt(1);
-            }
-            String ins = "INSERT INTO vgi.vgi_datasets(dataset_id, dataset_name, description, user_id)"
-                    + " VALUES ("+newId+", '"
-                    +this.datasetName+"', '"
-                    +this.description+"', "
-                    +this.userId+");";
-            SQLExecutor.executeUpdate(ins);
-            return newId;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-        
+                + user_id + "]";
     }
 }
