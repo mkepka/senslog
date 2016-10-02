@@ -18,7 +18,7 @@ public class DateUtil {
      * length=19
      */
     public static SimpleDateFormat formatSecs = new SimpleDateFormat(patternSecs);
-    //--------------------------------------------------------------------------------------------
+
     public static String patternSecsWT = "yyyy-MM-dd'T'HH:mm:ss";
     public static int patternSecsWTLen = 19;
     /**
@@ -26,7 +26,7 @@ public class DateUtil {
      * length=19
      */
     public static SimpleDateFormat formatSecsWT = new SimpleDateFormat(patternSecsWT);
-    //--------------------------------------------------------------------------------------------
+
     public static String patternMiliSecs = "yyyy-MM-dd HH:mm:ss.SSS";
     public static int patternMiliSecsLen = 23;
     /**
@@ -34,7 +34,7 @@ public class DateUtil {
      * length=23
      */
     public static SimpleDateFormat formatMiliSecs = new SimpleDateFormat(patternMiliSecs);
-    //--------------------------------------------------------------------------------------------
+
     public static String patternMiliSecsWT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
     public static int patternMiliSecsWTLen = 23;
     /**
@@ -42,7 +42,7 @@ public class DateUtil {
      * length=23
      */
     public static SimpleDateFormat formatMiliSecsWT = new SimpleDateFormat(patternMiliSecsWT);
-    //--------------------------------------------------------------------------------------------
+    
     public static String patternSecsTZ = "yyyy-MM-dd HH:mm:ssZ";
     public static int patternSecsTZLen = 24;
     /**
@@ -50,7 +50,7 @@ public class DateUtil {
      * length=24
      */
     public static SimpleDateFormat formatSecsTZ = new SimpleDateFormat(patternSecsTZ);
-    //--------------------------------------------------------------------------------------------
+    
     public static String patternSecsTZwT = "yyyy-MM-dd'T'HH:mm:ssZ";
     public static int patternSecsTZwTLen = 24;
     /**
@@ -58,10 +58,7 @@ public class DateUtil {
      * length=24
      */
     public static SimpleDateFormat formatSecsTZwT = new SimpleDateFormat(patternSecsTZwT);
-    //--------------------------------------------------------------------------------------------
-    public static String patternISO = "yyyy-MM-dd HH:mm:ssZZ:ZZ";
-    public static int patternISOLen = 25;
-    //--------------------------------------------------------------------------------------------
+    
     public static String patternMiliSecsTZ = "yyyy-MM-dd HH:mm:ss.SSSZ";
     public static int patternMiliSecsTZLen = 28;
     /**
@@ -69,7 +66,7 @@ public class DateUtil {
      * length=28
      */
     public static SimpleDateFormat formatMiliSecsTZ = new SimpleDateFormat(patternMiliSecsTZ);
-    //--------------------------------------------------------------------------------------------
+    
     public static String patternMiliSecsTZwT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public int patternMiliSecsTZwTLen = 28;
     /**
@@ -77,9 +74,8 @@ public class DateUtil {
      * length=28
      */
     public static SimpleDateFormat formatMiliSecsTZwT = new SimpleDateFormat(patternMiliSecsTZwT);
-    //--------------------------------------------------------------------------------------------
-    public static String patternISOMilis = "yyyy-MM-dd HH:mm:ss.SSSZZ:ZZ";
-    public static int patternISOMilisLen = 29;
+
+    
     /**
      * Method parses timestamp String to Date
      * uses several patterns to test correct format
@@ -92,8 +88,8 @@ public class DateUtil {
         if(containsZ){
             time = time.replace("Z", "+0000");
         }
-        int len = time.length();
         
+        int len = time.length();
         char suffixTZ = time.charAt(len-3);
         if(suffixTZ == '+' || suffixTZ == '-'){
             time = time+"00";
@@ -190,54 +186,6 @@ public class DateUtil {
                     Date date = formatMiliSecsTZwT.parse(time);
                     return date;
                 } catch (ParseException e) {
-                    throw new ParseException(e.getMessage(), 0);
-                }
-            }
-            else{
-                throw new ParseException("Unsupported pattern!", 0);
-            }
-        }
-        else if(len == patternISOLen){
-            char colonTZ = time.charAt(len-3);
-            if(colonTZ == ':'){
-                String part1 = time.substring(0, len-3);
-                String part2 = time.substring(len-2, len);
-                try{
-                    if(containsT){
-                        Date date = formatSecsTZwT.parse(part1+part2);
-                        return date;
-                    }else if(containsSpace){
-                        Date date = formatSecsTZ.parse(part1+part2);
-                        return date;
-                    }
-                    else{
-                        throw new ParseException("Unsupported pattern!", 0);
-                    }
-                } catch(ParseException e){
-                    throw new ParseException(e.getMessage(), 0);
-                }
-            }
-            else{
-                throw new ParseException("Unsupported pattern!", 0);
-            }
-        }
-        else if(len == patternISOMilisLen){
-            char colonTZ = time.charAt(len-3);
-            if(colonTZ == ':'){
-                String part1 = time.substring(0, len-3);
-                String part2 = time.substring(len-2, len);
-                try{
-                    if(containsT){
-                        Date date = formatMiliSecsTZwT.parse(part1+part2);
-                        return date;
-                    }else if(containsSpace){
-                        Date date = formatMiliSecsTZ.parse(part1+part2);
-                        return date;
-                    }
-                    else{
-                        throw new ParseException("Unsupported pattern!", 0);
-                    }
-                } catch(ParseException e){
                     throw new ParseException(e.getMessage(), 0);
                 }
             }
