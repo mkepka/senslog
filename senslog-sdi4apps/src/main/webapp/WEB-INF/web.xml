@@ -158,6 +158,11 @@
           <param-value>true</param-value>
       </init-param>
       
+      <init-param>
+          <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+          <param-value>cz.hsrs.rest.util.CorsFilter</param-value>
+      </init-param>
+      
 <!--     <init-param> -->
 <!--       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name> -->
 <!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter</param-value> -->
@@ -171,7 +176,6 @@
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
   
-
     <init-param>
         <param-name>development</param-name>
         <param-value>false</param-value>

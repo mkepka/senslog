@@ -19,8 +19,6 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.io.IOUtils;
 
-import cz.hsrs.db.model.vgi.VgiCategory;
-import cz.hsrs.db.model.vgi.VgiDataset;
 import cz.hsrs.db.model.vgi.VgiMedia;
 import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.pool.SQLExecutor;
@@ -405,19 +403,169 @@ public class VgiUtil {
     }
     
     /**
-     * 
-     * @param userId
-     * @return
+     * Method selects VgiObservations by given filters
+     * @param userId - user ID that has VGI Observations
+     * @param fromTime - beginning of time frame, optional
+     * @param toTime - end of time frame, optional
+     * @return List of VgiObservations as JSONObjects
      * @throws SQLException
      */
-    public List<JSONObject> getVgiObservationsByUserAsJSON(int userId) throws SQLException{
+    public List<JSONObject> getVgiObservationsByUserAsJSON(int userId, String fromTime, String toTime) throws SQLException{
         try{
-            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+            String query;
+            if(fromTime == null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime == null && toTime != null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime != null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else{
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            }
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
+            return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    public JSONObject getVgiObservationByObsIdAsJSON(int userId, int obsId) throws SQLException{
+    	try{
+        	String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
                     + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
                     + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
                     + " FROM vgi.observations_vgi ov, units_positions up"
                     + " WHERE ov.user_id = "+userId+""
+                    + " AND ov.obs_vgi_id = "+obsId+""
                     + " AND ov.gid = up.gid;";
+        	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+        	JSONObject vgiObs = convertVgiObservationResultSet2JSON(res);
+        	return vgiObs;
+         } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
+     * 
+     * @param userId
+     * @param datasetId
+     * @return
+     * @throws SQLException
+     */
+    public List<JSONObject> getVgiObservationsByUserByDatasetAsJSON(int userId, int datasetId, String fromTime, String toTime) throws SQLException{
+        try{
+            String query;
+            if(fromTime == null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.dataset_id = "+datasetId+""
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime == null && toTime != null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.dataset_id = "+datasetId+""
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime != null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.dataset_id = "+datasetId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else{
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.dataset_id = "+datasetId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            }
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
+            return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    public List<JSONObject> getVgiObservationsByUserByCategoryAsJSON(int userId, int categoryId, String fromTime, String toTime) throws SQLException{
+        try{
+            String query;
+            if(fromTime == null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.category_id = "+categoryId+""
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime == null && toTime != null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.category_id = "+categoryId+""
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else if(fromTime != null && toTime == null){
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.category_id = "+categoryId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.gid = up.gid;";
+            } else{
+                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
+                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
+                        + " FROM vgi.observations_vgi ov, units_positions up"
+                        + " WHERE ov.user_id = "+userId+""
+                        + " AND ov.category_id = "+categoryId+""
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.time_stamp <= '"+toTime+"'"
+                        + " AND ov.gid = up.gid;";
+            }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
             return vgiObsList;
@@ -473,58 +621,6 @@ public class VgiUtil {
     
     /**
      * 
-     * @return
-     * @throws SQLException
-     */
-    public List<VgiCategory> getCategoriesList() throws SQLException{
-        try{
-            String query = "SELECT category_id, category_name, description, parent_id, category_level, lft, rgt"
-                    + " FROM vgi.observations_vgi_category ORDER BY category_id;";
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<VgiCategory> catList = new LinkedList<VgiCategory>();
-            while(res.next()){
-                VgiCategory cat = new VgiCategory(
-                        res.getInt("category_id"),
-                        res.getString("category_name"),
-                        res.getString("description"),
-                        res.getInt("parent_id"),
-                        res.getInt("category_level"),
-                        res.getInt("lft"), res.getInt("rgt"));
-                catList.add(cat);
-            }
-            return catList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
-     * 
-     * @param userId
-     * @return
-     * @throws SQLException
-     */
-    public List<VgiDataset> getDatasetsList(int userId) throws SQLException{
-        try{
-            String query = "SELECT dataset_id, dataset_name, description"
-                    + " FROM vgi.vgi_datasets ORDER BY dataset_id;";
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<VgiDataset> datList = new LinkedList<VgiDataset>();
-            while(res.next()){
-                VgiDataset dat = new VgiDataset(
-                        res.getInt("dataset_id"), 
-                        res.getString("dataset_name"),
-                        res.getString("description"));
-                datList.add(dat);
-            }
-            return datList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
-     * 
      * @param obsId
      * @throws SQLException
      */
@@ -571,5 +667,35 @@ public class VgiUtil {
             vgiObsList.add(feature);
         }
         return vgiObsList;
+    }
+    
+    /**
+     * 
+     * @param res
+     * @return
+     * @throws SQLException
+     */
+    private JSONObject convertVgiObservationResultSet2JSON(ResultSet res) throws SQLException{
+        if(res.next()){
+            // feature
+            JSONObject feature = new JSONObject();
+            feature.put("type", "Feature");
+            feature.put("geometry", res.getString("st_asgeojson"));
+            // properties
+            JSONObject properties = new JSONObject();
+            properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
+            properties.put("category_id", res.getInt("category_id"));
+            properties.put("dataset_id", res.getInt("dataset_id"));
+            properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
+            properties.put("media_count", res.getInt("media_count"));
+            properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
+            properties.put("time_stamp", res.getString("time_stamp"));
+            properties.put("unit_id", res.getLong("unit_id"));
+            feature.put("properties", properties);
+            return feature;
+        }
+        else{
+        	return new JSONObject();
+        }
     }
 }
