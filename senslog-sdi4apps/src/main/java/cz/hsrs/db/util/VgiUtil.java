@@ -15,15 +15,15 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import net.sf.json.JSONObject;
-
 import org.apache.commons.io.IOUtils;
 
 import cz.hsrs.db.model.vgi.VgiMedia;
-import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.pool.SQLExecutor;
 
 public class VgiUtil {
+	
+    private static final String SCHEMA_NAME = "vgi";
+    private static final String DATASET_TABLE_NAME = "vgi_datasets";
     
     /**
      * Method inserts new POI to database and returns Id of this new POI
@@ -69,100 +69,6 @@ public class VgiUtil {
             throw new SQLException("An error occurs during inserting of new POI!");
         }
     }
-
-    /**
-     * 
-     * @param timestamp - Time stamp when observation was recorded - mandatory
-     * @param categoryId - Id of category - mandatory
-     * @param description - Detailed description of observation - optional
-     * @param attributes - Other attributes in JSON format - optional
-     * @param unitId - Id of device that recorded observation - mandatory
-     * @param userId - Id of user that recorded observation - mandatory
-     * @param datasetId - Id of dataset - mandatory
-     * @return Id of inserted observation as integer
-     * @throws SQLException
-     */
-    public static int insertVgiObs(String timestamp, Integer categoryId, String description, 
-            String attributes, long unitId, int userId, int datasetId) throws SQLException{
-        int newId = getNextVgiObsID();
-        
-        StringBuffer ins = new StringBuffer();
-        ins.append("INSERT INTO vgi.observations_vgi(obs_vgi_id, time_stamp, category_id,"
-                + " description, attributes, dataset_id, unit_id, user_id) VALUES(");
-        ins.append(newId+", ");
-        ins.append("'"+timestamp+"', ");
-        ins.append(categoryId+", ");
-        if(description == null){
-            ins.append("NULL, ");
-        }
-        else{
-            ins.append("'"+description+"', ");
-        }
-        if(attributes == null){
-            ins.append("NULL, ");
-        }
-        else if(attributes != null && attributes.isEmpty()){
-            ins.append("NULL, ");
-        }
-        else{
-            ins.append("'"+attributes+"', ");
-        }
-        ins.append(datasetId+", ");
-        ins.append(unitId+", ");
-        ins.append(userId+"); ");
-        try{
-            String query = ins.toString();
-            SQLExecutor.executeUpdate(query);
-            return newId;
-        } catch (SQLException e){
-            throw new SQLException("An error occurs during inserting of new POI!");
-        }
-    }
-    
-    /**
-     * 
-     * @param obsId
-     * @param timestamp
-     * @param categoryId
-     * @param description
-     * @param attributes
-     * @param unitId
-     * @param userId
-     * @param datasetId
-     * @return
-     * @throws SQLException
-     */
-    public static boolean updateVgiObs(int obsId, String timestamp, Integer categoryId, String description, 
-            String attributes, long unitId, int userId, int datasetId) throws SQLException{
-        
-        StringBuffer ins = new StringBuffer();
-        ins.append("UPDATE vgi.observations_vgi SET ");
-        if(timestamp != null){
-            ins.append("time_stamp = '"+timestamp+"', ");
-        }
-        if(categoryId != null){
-            ins.append("category_id = "+categoryId+", ");
-        }
-        if(description != null){
-            ins.append("description = '"+description+"', ");
-        }
-        if(attributes != null && !attributes.isEmpty()){
-            ins.append("attributes = '"+attributes+"', ");
-        }
-        ins.append("dataset_id = "+datasetId+", ");
-        ins.append("unit_id = "+unitId+", ");
-        ins.append("user_id = "+userId+" ");
-        
-        ins.append("WHERE obs_vgi_id = "+obsId+";");
-        
-        try{
-            String query = ins.toString();
-            SQLExecutor.executeUpdate(query);
-            return true;
-        } catch (SQLException e){
-            throw new SQLException("An error occurs during inserting of new POI!");
-        }
-    }
     
     /**
      * Method inserts new image connected to existing POI
@@ -177,20 +83,6 @@ public class VgiUtil {
         String query = "INSERT INTO poi.poi_image(image_id, image, ogc_fid) VALUES("+newImageId+", ?, "+poiId+");";
         SQLExecutor.insertStream(query, image, fileSize);
         return newImageId;
-    }
-    
-    /**
-     * 
-     * @param vgiId
-     * @param media
-     * @param fileSize
-     * @param mediaType
-     * @throws SQLException
-     */
-    public static void insertVgiMedia(long vgiId, InputStream media, long fileSize, String mediaType) throws SQLException{
-        String query = "INSERT INTO vgi.observations_vgi_media(obs_vgi_id, observed_media, media_datatype)"
-                + " VALUES("+vgiId+", ?, '"+mediaType+"');";
-        SQLExecutor.insertStream(query, media, fileSize);
     }
     
     /**
@@ -346,235 +238,6 @@ public class VgiUtil {
     }
     
     /**
-     * Method selects next value of observation_vgi ID
-     * @return next value of ID
-     * @throws SQLException
-     */
-    private static int getNextVgiObsID() throws SQLException{
-        try{
-            String selectId = "SELECT nextval('vgi.observations_vgi_obs_vgi_id_seq'::regclass);";
-            ResultSet resId = SQLExecutor.getInstance().executeQuery(selectId);
-            if(resId.next()){
-                return resId.getInt(1);
-            }
-            else{
-                throw new SQLException("Observation can't get new ID!");
-            }
-        } catch(SQLException e){
-            throw new SQLException("Observation can't get new ID!");
-        }
-    }
-    
-    /**
-     * Method to get all VGI observations associated to given user
-     * @param userId - ID of user
-     * @return List of VGI observations 
-     * @throws SQLException
-     */
-    public List<VgiObservation> getVgiObservationsByUser(int userId) throws SQLException{
-        try{
-            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                    + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                    + " FROM vgi.observations_vgi ov, units_positions up"
-                    + " WHERE ov.user_id = "+userId+""
-                    + " AND ov.gid = up.gid;";
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
-            while(res.next()){
-                VgiObservation obs = new VgiObservation(
-                        res.getInt("obs_vgi_id"),
-                        res.getInt("gid"),
-                        res.getString("time_stamp"),
-                        res.getInt("category_id"),
-                        res.getString("description"),
-                        res.getString("attributes"),
-                        res.getInt("dataset_id"),
-                        res.getLong("unit_id"),
-                        res.getInt("user_id"),
-                        res.getString("time_received"),
-                        res.getInt("media_count"));
-                vgiObsList.add(obs);
-            }
-            return vgiObsList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
-     * Method selects VgiObservations by given filters
-     * @param userId - user ID that has VGI Observations
-     * @param fromTime - beginning of time frame, optional
-     * @param toTime - end of time frame, optional
-     * @return List of VgiObservations as JSONObjects
-     * @throws SQLException
-     */
-    public List<JSONObject> getVgiObservationsByUserAsJSON(int userId, String fromTime, String toTime) throws SQLException{
-        try{
-            String query;
-            if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            }
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
-            return vgiObsList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    public JSONObject getVgiObservationByObsIdAsJSON(int userId, int obsId) throws SQLException{
-    	try{
-        	String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                    + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                    + " FROM vgi.observations_vgi ov, units_positions up"
-                    + " WHERE ov.user_id = "+userId+""
-                    + " AND ov.obs_vgi_id = "+obsId+""
-                    + " AND ov.gid = up.gid;";
-        	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-        	JSONObject vgiObs = convertVgiObservationResultSet2JSON(res);
-        	return vgiObs;
-         } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
-     * 
-     * @param userId
-     * @param datasetId
-     * @return
-     * @throws SQLException
-     */
-    public List<JSONObject> getVgiObservationsByUserByDatasetAsJSON(int userId, int datasetId, String fromTime, String toTime) throws SQLException{
-        try{
-            String query;
-            if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            }
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
-            return vgiObsList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    public List<JSONObject> getVgiObservationsByUserByCategoryAsJSON(int userId, int categoryId, String fromTime, String toTime) throws SQLException{
-        try{
-            String query;
-            if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
-            } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM vgi.observations_vgi ov, units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
-            }
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2JSON(res);
-            return vgiObsList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
      * 
      * @param userId
      * @param fromTime
@@ -582,6 +245,7 @@ public class VgiUtil {
      * @return
      * @throws SQLException
      */
+    /*
     public List<JSONObject> getVgiObservationsByUserByTimeAsJSON(int userId, String fromTime, String toTime) throws SQLException{
         try{
             String query;
@@ -618,84 +282,5 @@ public class VgiUtil {
             throw new SQLException(e.getMessage());
         }
     }
-    
-    /**
-     * 
-     * @param obsId
-     * @throws SQLException
-     */
-    public List<VgiMedia> getVgiMedia(int obsId) throws SQLException{
-        try{
-            String select = "SELECT med_id, obs_vgi_id, time_received, observed_media, media_datatype "
-                    + "FROM vgi.observations_vgi_media WHERE obs_vgi_id = "+obsId+";"; 
-            ResultSet rs = SQLExecutor.getInstance().executeQuery(select);
-            List<VgiMedia> mediaList = new LinkedList<VgiMedia>();
-            while (rs.next()) {
-                VgiMedia medium = new VgiMedia(
-                        rs.getInt("med_id"),
-                        rs.getInt("obs_vgi_id"),
-                        rs.getString("time_received"),
-                        rs.getBytes("observed_media"),
-                        rs.getString("media_datatype"));
-                mediaList.add(medium);
-            }
-            return mediaList;
-        } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    private LinkedList<JSONObject> convertVgiObsResultSet2JSON(ResultSet res) throws SQLException{
-        LinkedList<JSONObject> vgiObsList = new LinkedList<JSONObject>();
-        while(res.next()){
-            // feature
-            JSONObject feature = new JSONObject();
-            feature.put("type", "Feature");
-            feature.put("geometry", res.getString("st_asgeojson"));
-            // properties
-            JSONObject properties = new JSONObject();
-            properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
-            properties.put("category_id", res.getInt("category_id"));
-            properties.put("dataset_id", res.getInt("dataset_id"));
-            properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
-            properties.put("media_count", res.getInt("media_count"));
-            properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
-            properties.put("time_stamp", res.getString("time_stamp"));
-            properties.put("unit_id", res.getLong("unit_id"));
-            feature.put("properties", properties);
-            
-            vgiObsList.add(feature);
-        }
-        return vgiObsList;
-    }
-    
-    /**
-     * 
-     * @param res
-     * @return
-     * @throws SQLException
-     */
-    private JSONObject convertVgiObservationResultSet2JSON(ResultSet res) throws SQLException{
-        if(res.next()){
-            // feature
-            JSONObject feature = new JSONObject();
-            feature.put("type", "Feature");
-            feature.put("geometry", res.getString("st_asgeojson"));
-            // properties
-            JSONObject properties = new JSONObject();
-            properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
-            properties.put("category_id", res.getInt("category_id"));
-            properties.put("dataset_id", res.getInt("dataset_id"));
-            properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
-            properties.put("media_count", res.getInt("media_count"));
-            properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
-            properties.put("time_stamp", res.getString("time_stamp"));
-            properties.put("unit_id", res.getLong("unit_id"));
-            feature.put("properties", properties);
-            return feature;
-        }
-        else{
-        	return new JSONObject();
-        }
-    }
+    */
 }

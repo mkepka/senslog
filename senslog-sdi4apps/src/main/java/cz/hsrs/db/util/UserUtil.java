@@ -41,14 +41,14 @@ public class UserUtil extends GroupUtil {
      * @throws SQLException 
      */
     public int getUserId(String userName) throws NoItemFoundException, SQLException{
-    	String query = "SELECT user_id FROM system_users WHERE user_name = '"+userName+"';";
-    	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-    	if(res.next()){
-    		return res.getInt(1);
-    	}
-    	else{
-    		throw new NoItemFoundException("User with given " + userName + " was not found.");
-    	}
+        String query = "SELECT user_id FROM system_users WHERE user_name = '"+userName+"';";
+        ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+        if(res.next()){
+            return res.getInt(1);
+        }
+        else{
+            throw new NoItemFoundException("User with given " + userName + " was not found.");
+        }
     }
     
     public boolean getAudio(String user_name) throws SQLException, NoItemFoundException {
@@ -86,14 +86,14 @@ public class UserUtil extends GroupUtil {
      * @throws SQLException
      */
     public static Integer getUserGroupId(String userName) throws SQLException{
-    	String query = "SELECT group_id FROM system_users WHERE user_name ='"+userName+"';";
-    	ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-    	if(res.next()){
-    		return res.getInt(1);
-    	}
-    	else{
-    		return null;
-    	}
+        String query = "SELECT group_id FROM system_users WHERE user_name ='"+userName+"';";
+        ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+        if(res.next()){
+            return res.getInt(1);
+        }
+        else{
+            return null;
+        }
     }
     
     
@@ -106,7 +106,7 @@ public class UserUtil extends GroupUtil {
     }
 */
     @SuppressWarnings("unchecked")
-	public List<LastPosition> getLastPositionWithStatus(String user_name)
+    public List<LastPosition> getLastPositionWithStatus(String user_name)
             throws SQLException {
         List<LastPosition> lastPositions = new ArrayList<LastPosition>();
 
@@ -299,7 +299,7 @@ public class UserUtil extends GroupUtil {
     }
     
     @SuppressWarnings("unchecked")
-	public List<Unit> getUnitsByUser(String user_name) throws SQLException{
+    public List<Unit> getUnitsByUser(String user_name) throws SQLException{
         String query = "SELECT u.unit_id, u.holder_id, u.description " +
                 "FROM units u, units_to_groups utg, system_users su " +
                 "WHERE su.user_name = '"+user_name+"' " +

@@ -15,10 +15,10 @@ public class VgiCategory {
     private int categoryId;
     private String categoryName;
     private String description;
-    private int parentId;
-    private int level;
-    private int lft;
-    private int rgt;
+    private Integer parentId; // top-level categories has NULL
+    private Integer level;
+    private Integer lft;
+    private Integer rgt;
     
     /**
      * Empty constructor
@@ -27,16 +27,17 @@ public class VgiCategory {
     }
     
     /**
-     * @param categoryId
-     * @param categoryName
-     * @param description
-     * @param parentId
-     * @param level
-     * @param lft
-     * @param rgt
+     * Constructor creates instance from fields, for selecting from DB
+     * @param categoryId - ID of VgiCategory, mandatory
+     * @param categoryName - name of VgiCategory, optional
+     * @param description - description of VgiCategory, optional
+     * @param parentId - ID of parent VgiCategory, top-level VgiCategory has NULL parent
+     * @param level - ID of level of VgiCategory, can be NULL, top-level has 0
+     * @param lft - left value of preoder tree traversal, can be NULL
+     * @param rgt - right value of preoder tree traversal, can be NULL
      */
     public VgiCategory(int categoryId, String categoryName, String description,
-            int parentId, int level, int lft, int rgt) {
+    		Integer parentId, Integer level, Integer lft, Integer rgt) {
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.description = description;
@@ -48,11 +49,11 @@ public class VgiCategory {
 
     /**
      * Constructor for insert new Category by user
-     * @param categoryName
-     * @param description
-     * @param parentId
+     * @param categoryName - name of VgiCategory, optional
+     * @param description - description of VgiCategory, optional
+     * @param parentId - ID of parent VgiCategory, top-level VgiCategory has NULL parent
      */
-    public VgiCategory(String categoryName, String description, int parentId) {
+    public VgiCategory(String categoryName, String description, Integer parentId) {
         this.categoryName = categoryName;
         this.description = description;
         this.parentId = parentId;
@@ -82,28 +83,28 @@ public class VgiCategory {
     /**
      * @return the parentId
      */
-    public int getParentId() {
+    public Integer getParentId() {
         return parentId;
     }
 
     /**
      * @return the level
      */
-    public int getLevel() {
+    public Integer getLevel() {
         return level;
     }
 
     /**
      * @return the lft
      */
-    public int internalGetLft() {
+    public Integer internalGetLft() {
         return lft;
     }
 
     /**
      * @return the rgt
      */
-    public int internalGetRgt() {
+    public Integer internalGetRgt() {
         return rgt;
     }
 

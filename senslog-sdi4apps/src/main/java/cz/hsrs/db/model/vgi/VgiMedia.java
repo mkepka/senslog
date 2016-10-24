@@ -12,7 +12,7 @@ public class VgiMedia {
     private String timeReceivedString;
     private Date timeReceived;
     private byte[] observedMedia;
-    private String mediaDatatype;
+    private String datatype;
     
     /**
      * Empty constructor
@@ -33,7 +33,7 @@ public class VgiMedia {
         this.obsId = obsId;
         this.timeReceivedString = timeReceivedString;
         this.observedMedia = observedMedia;
-        this.mediaDatatype = mediaDatatype;
+        this.datatype = mediaDatatype;
         try {
             this.timeReceived = DateUtil.parseTimestampMicro(timeReceivedString);
         } catch (ParseException e) {
@@ -41,6 +41,25 @@ public class VgiMedia {
         }
     }
 
+    /**
+     * Constructor for Media file metadata
+     * @param mediaId - ID of VgiMedia
+     * @param obsId - ID of master VgiObservation
+     * @param timeReceivedString - time stamp when media was received to the DB
+     * @param mediaDatatype - data type of media file
+     */
+    public VgiMedia(int mediaId, int obsId, String timeReceivedString, String mediaDatatype) {
+        this.mediaId = mediaId;
+        this.obsId = obsId;
+        this.timeReceivedString = timeReceivedString;
+        this.datatype = mediaDatatype;
+        try {
+            this.timeReceived = DateUtil.parseTimestampMicro(timeReceivedString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+    
     /**
      * @return the mediaId
      */
@@ -81,7 +100,7 @@ public class VgiMedia {
      * @return the mediaDatatype
      */
     public String getMediaDatatype() {
-        return mediaDatatype;
+        return datatype;
     }
 
     /* (non-Javadoc)
@@ -91,7 +110,7 @@ public class VgiMedia {
     public String toString() {
         return "VgiMedia [mediaId=" + mediaId + ", obsId=" + obsId
                 + ", timeReceivedString=" + timeReceivedString
-                + ", mediaDatatype=" + mediaDatatype + "]";
+                + ", mediaDatatype=" + datatype + "]";
     }
     
 }

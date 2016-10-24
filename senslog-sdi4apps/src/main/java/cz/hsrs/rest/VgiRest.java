@@ -1,44 +1,29 @@
 package cz.hsrs.rest;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.List;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import cz.hsrs.db.model.NoItemFoundException;
-import cz.hsrs.db.model.vgi.VgiCategory;
-import cz.hsrs.db.model.vgi.VgiDataset;
-import cz.hsrs.db.model.vgi.VgiMedia;
-import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.util.DateUtil;
-import cz.hsrs.main.ApplicationParams;
 import cz.hsrs.rest.util.BasicAuth;
 import cz.hsrs.rest.util.RestUtil;
+import cz.hsrs.rest.util.VgiObservationRestUtil;
 
 @Path("/vgi")
 public class VgiRest {
@@ -263,131 +248,35 @@ public class VgiRest {
             @FormDataParam("lon") String lonValue,
             @FormDataParam("lat") String latValue,
             @FormDataParam("media") InputStream fileInStream,
-            @FormDataParam("media") FormDataContentDisposition fileDetail
+            @FormDataParam("media") FormDataContentDisposition fileDetail,
+            @FormDataParam("media_type") String mediaType,
+            @QueryParam("user_name") String userName
             ){
-        RestUtil rUtil = new RestUtil();
+        VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         try {
-            String userName = "tester";
+        	if(userName == null){
+        		userName = "tester";
+        	}
+            if(mediaType == null){
+            	mediaType = "image/png";
+            }
+
             if(obsId == null){
-                int newObsId = rUtil.processVgiObs(timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream);
+                int newObsId = orUtil.processInsertVgiObs(timestampValue, catValue, descValue, attsValue,
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream, mediaType);
                 return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
-                        //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                         .build();
             }
             else{
-                boolean inserted = rUtil.updateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream);
+                boolean inserted = orUtil.processUpdateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream, mediaType);
                 return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
-                        //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                         .build();
             }
         } catch (Exception e) {
             return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
                     .build();
         }
-    }
-    
-    /**
-     * Method processes service to get all VGIObservations associated to given user
-     * @param userName - username of given user (mandatory)
-     * @param format - format of the response (optional), geojson or json
-     * @return
-     */
-    @Path("/observations/select")
-    @GET
-    public Response selectVgiObservations(
-            @QueryParam("user_name") String userName,
-            @QueryParam("format") String format,
-            @QueryParam("dataset_id") Integer datasetId,
-            @QueryParam("category_id") Integer categoryId,
-            @QueryParam("fromTime") String fromTime,
-            @QueryParam("toTime") String toTime){
-        RestUtil rUtil = new RestUtil();
-        try{
-            if(userName != null){
-                if(format != null && format.equalsIgnoreCase("geojson")){
-                    JSONObject featureColl = rUtil.getVgiObservationBeansByUser(userName, fromTime, toTime, datasetId, categoryId);
-                    return Response.ok(featureColl, MediaType.APPLICATION_JSON+";charset=utf-8")
-                            //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                            .build();
-                } 
-                else{
-                    List<VgiObservation> obsList = rUtil.getVgiObservationsByUser(userName);
-                    return Response.ok(obsList)
-                            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON+";charset=utf-8")
-                            //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                            .build();
-                }
-            }
-            else{
-                return Response.status(Status.BAD_REQUEST)
-                        .entity("Parameter user_name has to be given!")
-                        //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                        .build();
-            }
-        } catch(SQLException e){
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        } catch (NoItemFoundException e) {
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        } catch (ParseException e) {
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-    }
-    
-    /**
-     * 
-     * @param obsId
-     * @param username
-     * @return
-     */
-    @Path("/observation/{obs_vgi_id}")
-    @GET
-    public Response getVgiObservation(@PathParam("obs_vgi_id") Integer obsId, @QueryParam("user_name") String username) {
-        RestUtil rUtil = new RestUtil();
-        try{
-            JSONObject feature = rUtil.getVgiObservation(obsId, username);
-            return Response.ok(feature, MediaType.APPLICATION_JSON+";charset=utf-8")
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .build();
-        } catch(SQLException e){
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        } catch (NoItemFoundException e) {
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-    }
-    /**
-     * 
-     * @param obsId
-     * @return
-     * @throws SQLException
-     */
-    @Path("/media/select")
-    @GET
-    public Response selectVgiMedia(@QueryParam("obs_id") Integer obsId) throws SQLException{
-        RestUtil rUtil = new RestUtil();
-        List<VgiMedia> media = rUtil.getVgiMedia(obsId);
-        return Response.ok(new ByteArrayInputStream(media.get(0).getObservedMedia()), media.get(0).getMediaDatatype())
-                //.header("Content-Disposition", "attachment; filename="+media.get(0).internalGetTimeReceivedMilis()+".png")
-                .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                .build();
     }
     /**
      * 
@@ -410,120 +299,4 @@ public class VgiRest {
                 .build();
     }
     */
-    @Path("/category/select")
-    @GET
-    public Response selectCategories(){
-        RestUtil rUtil = new RestUtil();
-        try{
-            List<VgiCategory> catList = rUtil.getVgiCategories();
-            return Response.ok(catList)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON+";charset=utf-8")
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .build();
-        } catch(SQLException e){
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-    }
-    
-    /**
-     * 
-     * @return List of datasets associated to the user
-     */
-    @Path("/dataset/select")
-    @GET
-    public Response selectDatasets(@QueryParam("user_name") String userName){
-        RestUtil rUtil = new RestUtil();
-        if(userName != null && !userName.isEmpty()){
-            try{
-                List<VgiDataset> dataList = rUtil.getVgiDatasets(userName);
-                return Response.ok(dataList)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                        //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                        .build();
-            } catch(SQLException e){
-                return Response.serverError().entity(e.getMessage())
-                        //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                        .build();
-            }
-        }
-        else{
-            return Response.serverError().entity("No user was given!")
-                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-
-    }
-    
-    /**
-     * /rest/vgi/dataset/insert?user_name=
-     * 
-     * @param payload
-     * @param userName
-     * @return
-     */
-    @Path("/dataset/insert")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON+";charset=utf-8")
-    public Response insertDataset(String payload, @QueryParam("user_name") String userName){
-        try{
-            JSONObject dataset = JSONObject.fromObject(payload);
-            RestUtil rUtil = new RestUtil();
-            int datasetId = rUtil.insertVgiDataset(dataset, userName);
-            JSONObject resp = new JSONObject();
-            resp.accumulate("dataset_id", datasetId);
-            
-            return Response.ok(resp)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .build();
-        } catch(JSONException e){
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        } catch (SQLException e) {
-            return Response.serverError().entity(e.getMessage())
-                    //.header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-    }
-    
-    /**
-     * Service deletes dataset by given dataset_id
-     * @param datasetId
-     * @param userName
-     * @return
-     */
-    @Path("/dataset/delete/{dataset_id}")
-    @DELETE
-    public Response deleteDataset(@PathParam("dataset_id") Integer datasetId, @QueryParam("user_name") String userName){
-        try{
-            RestUtil rUtil = new RestUtil();
-            if(userName != null && !userName.isEmpty()){
-                boolean isDeleted = rUtil.deleteVgiDataset(datasetId, userName);
-                return Response.ok(String.valueOf(isDeleted))
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                        .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                        .build();
-            }
-            else{
-                return Response.status(Status.BAD_REQUEST)
-                        .entity("Parameter user_name has to be given!")
-                        .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                        .build();
-            }
-        } catch(SQLException e){
-            return Response.serverError().entity(e.getMessage())
-                    .header(ApplicationParams.CORSHeaderName, ApplicationParams.CORSHeaderValue)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
-                    .build();
-        }
-    }
 }

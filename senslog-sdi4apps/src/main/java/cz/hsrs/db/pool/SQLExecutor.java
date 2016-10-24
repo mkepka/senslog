@@ -134,7 +134,7 @@ public class SQLExecutor {
     
     /**
      * Method insert row to table with one column with "bytea" 
-     * @param sql PreparedStatement to insert row with one ? parameter to insert InputStream
+     * @param sql PreparedStatement to insert row with one "?" parameter to insert InputStream
      * @param is InputStream with file
      * @param fileSize size of file in InputStream
      * @throws SQLException Throws SQLException if an exception occurs during inserting
