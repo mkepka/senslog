@@ -169,7 +169,7 @@ public class TestSpacialIgnitionCases {
     
     @Test
     public void testSemafor() throws Exception {
-        TrackUtil u = new TrackUtil();        
+        TrackUtil u = new TrackUtil();
         UnitPosition p;
         d1 = format.parse("2001-08-17 10:01");
         d2 = format.parse("2001-08-17 10:02");
@@ -179,32 +179,32 @@ public class TestSpacialIgnitionCases {
         d6 = format.parse("2001-08-17 10:06");
         
         /*auto jede*/
-        p = new UnitPosition(unit_id, 18, 1.0001, d1, 12.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0001, Double.NaN, d1, 12.0, "");
         p.insertToDb();    
         insObs(p, 1);
         
-        p = new UnitPosition(unit_id, 18, 1.0002, d2, 0.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0002, Double.NaN, d2, 0.0, "");
         p.insertToDb();    
         insObs(p, 1);
         
         /*auto je stoji nastartovano*/
         
-        p = new UnitPosition(unit_id, 18, 1.0002, d3, 0.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0002, Double.NaN, d3, 0.0, "");
         p.insertToDb();    
         insObs(p, 1);
         
-        p = new UnitPosition(unit_id, 18, 1.0002, d4, 0.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0002, Double.NaN, d4, 0.0, "");
         p.insertToDb();    
         insObs(p, 1);
     
         
         /*auto jede*/
         
-        p = new UnitPosition(unit_id, 18, 1.0002000001, d5, 12.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0002000001, Double.NaN, d5, 12.0, "");
          p.insertToDb();    
         insObs(p, 1);
         
-        p = new UnitPosition(unit_id, 18, 1.0003, d6, 12.0, "");
+        p = new UnitPosition(unit_id, 18, 1.0003, Double.NaN, d6, 12.0, "");
          p.insertToDb();    
         insObs(p, 1);
                 
@@ -213,12 +213,10 @@ public class TestSpacialIgnitionCases {
         Assert.assertEquals(d1.getTime(), t1.getStart().getTime());
         Assert.assertEquals(d6.getTime(), t1.getEnd().getTime());
         Assert.assertEquals(5,u.getTrackLenght(t1.getGid()));
-            
-        
     }
     
     private void insObs(UnitPosition p, double status) throws SQLException{
-        Observation o = new Observation(p.internalGetTime_stamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
+        Observation o = new Observation(p.internalGetTimestamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
         new TrackIgnitionSolver(o).solve();
     }
     
@@ -229,7 +227,5 @@ public class TestSpacialIgnitionCases {
     @After
     public void delData() throws Exception{
         util.deleteUnit(unit_id);
-    
-        //util.deleteCompany(comp_id);
     }
 }

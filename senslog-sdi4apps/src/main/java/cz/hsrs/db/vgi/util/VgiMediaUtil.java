@@ -32,8 +32,24 @@ public class VgiMediaUtil {
      */
     public static void insertVgiMedia(int obsId, InputStream media, long fileSize, String mediaType) throws SQLException{
         String query = "INSERT INTO "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
-        		+ "(obs_vgi_id, observed_media, media_datatype)"
+                + "(obs_vgi_id, observed_media, media_datatype)"
                 + " VALUES("+obsId+", ?, '"+mediaType+"');";
+        SQLExecutor.insertStream(query, media, fileSize);
+    }
+    
+    /**
+     * Method updates VgiMedia by given medId
+     * @param medId - ID of VgiMedia
+     * @param media - InputStream with media 
+     * @param fileSize - size of media file in bytes
+     * @param mediaType - data type of media, mandatory
+     * @throws SQLException
+     */
+    public static void updateVgiMedia(int medId, InputStream media, long fileSize, String mediaType) throws SQLException{
+        String query = "UPDATE "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+" SET"
+                + " observed_media = ?,"
+                + " media_datatype = "+mediaType
+                + " WHERE med_id = "+medId+";";
         SQLExecutor.insertStream(query, media, fileSize);
     }
     

@@ -25,6 +25,7 @@ public class DatabaseFeedOperation {
     private static int transaction_size = 1;
     private static int t = 0;
     private static String insertTransaction = "BEGIN;";
+    private static final String SCHEMA_NAME = "public";
 
     /**
      * Method inserts new Observation to DB
@@ -83,19 +84,17 @@ public class DatabaseFeedOperation {
      * @param lat - latitude
      * @param lon - longitude
      * @param alt - altitude
-     * @param date - when positions was measured
+     * @param date - when positions was measured as Date
      * @param speed - current speed of the unit
      * @return true is positions was successfully inserted, false elsewhere
      * @throws SQLException
      */
-    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, Date date, double speed) throws SQLException {
-        /**
-         * zde se ztrati alt!
-         */
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, 
+            Date date, double speed) throws SQLException {
         boolean useTracks = true;
         boolean inserted = false;
         
-        UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
+        UnitPosition p = new UnitPosition(unit_id, lon, lat, alt, date, speed, "");
         if(useTracks){
             inserted = solve(p);
         }
@@ -109,20 +108,21 @@ public class DatabaseFeedOperation {
     /**
      * Method inserts new position into DB 
      * @param unit_id - id of unit
-     * @param lat - latitude
-     * @param lon - longitude
-     * @param alt - altitude
+     * @param lat - latitude of position
+     * @param lon - longitude of position
+     * @param alt - altitude of position
      * @param dop - dilution of precision of the position
      * @param date - when positions was measured
      * @param speed - current speed of the unit
      * @return true is positions was successfully inserted, false elsewhere
      * @throws SQLException
      */
-    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, double dop, Date date, double speed) throws SQLException {
+    public static synchronized boolean insertPosition(long unit_id, double lat, double lon, double alt, 
+            double dop, Date date, double speed) throws SQLException {
         boolean useTracks = true;
         boolean inserted = false;
         
-        UnitPosition p = new UnitPosition(unit_id, lon, lat, date, speed, "");
+        UnitPosition p = new UnitPosition(unit_id, lon, lat, alt, date, speed, dop, "");
         if (useTracks){
             inserted = solve(p);
         }
@@ -131,6 +131,70 @@ public class DatabaseFeedOperation {
         }
         checkAlertQueries(p);
         return inserted;
+    }
+    
+    /**
+     * Method inserts new position into DB and returns ID
+     * @param unit_id - id of unit
+     * @param lat - latitude of position
+     * @param lon - longitude of position
+     * @param alt - altitude of position
+     * @param dop - dilution of precision of the position
+     * @param date - when positions was measured
+     * @param speed - current speed of the unit
+     * @return gid of new position
+     * @throws SQLException
+     */
+    public static synchronized int insertPositionByGid(long unit_id, double lat, double lon, double alt, 
+            double dop, Date date, double speed, String srid) throws SQLException {
+        boolean useTracks = true;
+        boolean inserted = false;
+        
+        UnitPosition p = new UnitPosition(unit_id, lon, lat, alt, date, speed, dop, srid);
+        if (useTracks){
+            inserted = solve(p);
+        }
+        else{
+            inserted = p.insertToDb();
+        }
+        checkAlertQueries(p);
+        if(inserted){
+            return p.getGid();
+        }
+        else{
+            throw new SQLException("Position cannot be inserted!");
+        }
+    }
+    
+    /**
+     * Method updates position in DB by given UnitPosition object
+     * @param p UnitPosition object containing values to be updated in DB
+     * @return true if UnitPosition was updated, false if not
+     * @throws SQLException
+     */
+    public static boolean updatePositionByGid(UnitPosition p) throws SQLException{
+        StringBuffer update = new StringBuffer();
+        update.append("UPDATE "+SCHEMA_NAME+".units_positions SET ");
+        update.append("the_geom = "+p.getPostgisString()+", ");
+        update.append("time_stamp = '"+p.getTime_stamp()+"', ");
+        
+        String speed = Double.isNaN(p.getSpeed()) ? "NULL" : String.valueOf(p.getSpeed());
+        update.append("speed = "+speed+", ");
+        String dop = Double.isNaN(p.getDop()) ? "NULL" : String.valueOf(p.getDop());
+        update.append("dop = "+dop);
+        if(SQLExecutor.isAltitudeEnabled()){
+            String alt = Double.isNaN(p.getAlt()) ? "NULL" : String.valueOf(p.getAlt());
+            update.append(", altitude = "+alt+" ");
+        }
+        update.append("WHERE gid = "+p.getGid());
+        String query = update.toString();
+        
+        int i = SQLExecutor.executeUpdate(query);
+        if(i == 0 || i == 1){
+            return true;
+        } else{
+            return false;
+        }
     }
 
     /**
@@ -149,9 +213,7 @@ public class DatabaseFeedOperation {
         }
     }
 
-    private static void addToTransaction(String query) throws SQLException,
-            InstantiationException, IllegalAccessException {
-
+    private static void addToTransaction(String query) throws SQLException, InstantiationException, IllegalAccessException {
         insertTransaction = insertTransaction + "\n" + query;
         t++;
         // System.out.println(i++);
@@ -162,18 +224,7 @@ public class DatabaseFeedOperation {
             insertTransaction = "BEGIN;";
             insertStatemant(insert);
         }
-
     }
-
-    /**
-     * Finds gid of last position according to time and date
-     * 
-     * @param name
-     * @param date
-     * @return
-     * @throws Exception
-     */
-    
 
     private static synchronized void insertStatemant(String insertStmt) throws SQLException {
         try {
@@ -187,15 +238,15 @@ public class DatabaseFeedOperation {
     }
 
     /**
-     * 
-     * @param date
-     * @param unit_id
-     * @param alert_id
+     * Method inserts new AlertEvent object to the DB
+     * @param date - when alert was detected, as Date
+     * @param unit_id - ID of unit
+     * @param alert_id - ID of Alert that was detected
      * @throws SQLException
      */
     public static synchronized void insertAlertEvent(Date date, long unit_id, int alert_id)
             throws SQLException {
-        String insertStmt = " INSERT INTO alert_events (time_stamp, unit_id, alert_id) VALUES ("
+        String insertStmt = " INSERT INTO "+SCHEMA_NAME+".alert_events (time_stamp, unit_id, alert_id) VALUES ("
                 + "'"
                 + date
                 + "'"
@@ -205,7 +256,6 @@ public class DatabaseFeedOperation {
                 + "'"
                 + alert_id
                 + "');";
-
         insertStatemant(insertStmt);
     }
 
@@ -215,15 +265,14 @@ public class DatabaseFeedOperation {
      * @throws SQLException
      */
     public static synchronized void solvingAlertEvent(int event_id) throws SQLException {
-        String updateStmt = "UPDATE alert_events SET solving = 'true' WHERE alert_event_id = "
-                + event_id + " ;";
-
+        String updateStmt = "UPDATE "+SCHEMA_NAME+".alert_events SET solving = 'true'"
+                + " WHERE alert_event_id = " + event_id + " ;";
         insertStatemant(updateStmt);
     }
     
     /**
-     * 
-     * @param pos
+     * Method checks new Position of unit for stored AlertQueries
+     * @param pos - Current position of unit
      * @throws SQLException
      */
     private static void checkAlertQueries(UnitPosition pos) throws SQLException{
@@ -242,7 +291,7 @@ public class DatabaseFeedOperation {
                     }
                     else if(newStatusAQ == false && lastStatusAQ == true){
                         aUtil.setNewAlertQueryLastStatus(newStatusAQ, aQuery, pos);
-                        insertAlertEvent(pos.internalGetTime_stamp(),pos.getUnit_id(),aQuery.getAlertId());
+                        insertAlertEvent(pos.internalGetTimestamp(),pos.getUnit_id(),aQuery.getAlertId());
                     }
                 }
                 catch(NoItemFoundException ex){
@@ -250,7 +299,7 @@ public class DatabaseFeedOperation {
                     aUtil.setNewAlertQueryLastStatus(newStatusAQ, aQuery, pos);
                     aUtil.setNewAlertQueryTimeStamp(aQuery, pos);
                     if(newStatusAQ == false){
-                        insertAlertEvent(pos.internalGetTime_stamp(),pos.getUnit_id(),aQuery.getAlertId());
+                        insertAlertEvent(pos.internalGetTimestamp(),pos.getUnit_id(),aQuery.getAlertId());
                     }
                 }
             }

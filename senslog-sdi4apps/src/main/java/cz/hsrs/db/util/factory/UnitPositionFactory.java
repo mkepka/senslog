@@ -17,7 +17,7 @@ import cz.hsrs.db.util.SensorUtil;
 import cz.hsrs.db.util.UnitUtil;
 
 /**
- * Factory class - prida infomace k UnitPosition o tom jestli jednotk a jela, mela nastartovano, je stale online apod...
+ * Factory class - prida infomace k UnitPosition o tom jestli jednotka jela, mela nastartovano, je stale online apod...
  * @author jezekjan
  *
  */
@@ -26,6 +26,11 @@ public class UnitPositionFactory {
     private LastPosition lp;
     private final long rfidSensorId = 680010000;
 
+    /**
+     * 
+     * @param pos
+     * @throws SQLException
+     */
     public UnitPositionFactory(UnitPosition pos) throws SQLException{
         UnitUtil ut = new UnitUtil();
         AlertUtil aUtil = new AlertUtil();
@@ -35,7 +40,7 @@ public class UnitPositionFactory {
         try {
             confTime = ut.getUnitConfTimeById(pos.getUnit_id());
         } catch (NoItemFoundException e) {
-            e.printStackTrace();
+            throw new SQLException(e.getMessage());
         }
         boolean isRunning = Boolean.FALSE;
         boolean isOnline = Boolean.FALSE;
@@ -55,7 +60,7 @@ public class UnitPositionFactory {
          */
         else {
             /** Kdyz je posledni pozice starsi nez confTime tak auto nejede */
-            if ((new Date()).getTime() - pos.internalGetTime_stamp().getTime() <= (confTime * 1000)) {
+            if ((new Date()).getTime() - pos.internalGetTimestamp().getTime() <= (confTime * 1000)) {
                 /** TODO - zjistit jak moc se auto skutecne hejbe */
                 //UnitPosition posbefore = ut.getPositionBefore(pos.getUnit_id(), pos.internalGetTime_stamp());
                 isRunning = true;
@@ -68,7 +73,7 @@ public class UnitPositionFactory {
         /**
          * Kdyz auto neposila po urcitou dobu pozice (5* conftime), bere se jako offline
          */
-        if (((new Date()).getTime() - pos.internalGetTime_stamp().getTime()) <= 24 * 3600 * 1000) {
+        if (((new Date()).getTime() - pos.internalGetTimestamp().getTime()) <= 24 * 3600 * 1000) {
             isOnline = true;
         } else {
             isOnline = false;
@@ -99,7 +104,6 @@ public class UnitPositionFactory {
             }
         }
         
-
         /**
          * alerty vlozim pouze pokud jednotka alerty poskytuje
          */

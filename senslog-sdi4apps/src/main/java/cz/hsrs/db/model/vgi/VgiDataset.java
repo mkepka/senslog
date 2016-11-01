@@ -6,12 +6,15 @@ package cz.hsrs.db.model.vgi;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.xml.bind.annotation.XmlRootElement;
+
 import cz.hsrs.db.pool.SQLExecutor;
 
 /**
  * @author mkepka
  *
  */
+@XmlRootElement
 public class VgiDataset {
 
     private int datasetId;

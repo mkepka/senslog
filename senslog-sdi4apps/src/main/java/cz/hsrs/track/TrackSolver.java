@@ -20,27 +20,24 @@ public class TrackSolver {
     private TrackUtil utilT;
     private UnitUtil utilU;
     private SensorUtil utilS;
-    private final UnitPosition pos;    
+    private final UnitPosition pos;
     int timeConst;
 
     public TrackSolver(UnitPosition pos) throws SQLException, NoItemFoundException  {
         super();
         try {
-            //con = ConnectionManager.getConnectionFeeder();
             utilT = new TrackUtil();
             utilU = new UnitUtil();
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             throw new SQLException(e);
         }
-        this.pos = pos;    
+        this.pos = pos;
     }
     
     private void solveNewPos(){
         
     }
     
-
     /**
      * Method inserts new position into DB and 
      * tries to solve track  
@@ -68,7 +65,7 @@ public class TrackSolver {
             return inserted;
         }
         
-        if (lastPos.internalGetTime_stamp().before(pos.internalGetTime_stamp())) {
+        if (lastPos.internalGetTimestamp().before(pos.internalGetTimestamp())) {
             // pozice je novejsi -> zvazime pridane pouze ke starymu track a kdyz se pozice neprida zacneme novej track
             inserted = pos.insertToDb();
             if (!tryToAddToOld()) { utilT.startTrack(pos);}
@@ -76,7 +73,7 @@ public class TrackSolver {
         } else {
             // -> pozice je starsi zkusime jestli bezi ;
             try {
-                TrackData runningT =utilT.getTrack(pos.getUnit_id(), pos.internalGetTime_stamp());
+                TrackData runningT =utilT.getTrack(pos.getUnit_id(), pos.internalGetTimestamp());
                 inserted = pos.insertToDb();
                 utilT.addToTrack( runningT, pos);
                 return inserted;
@@ -85,7 +82,7 @@ public class TrackSolver {
                 tryToAddOldAndNew();
                 return inserted;
             }
-            // -> pozice je starsi zkusime pridat k obema ;
+            // -> pozice je starsi zkusime pridat k obema;
         }
     }
 
@@ -94,19 +91,18 @@ public class TrackSolver {
      * @return
      */    
     private boolean tryToAddToOld() throws SQLException {
-        try {            
+        try {
             timeConst = utilU.getUnitConfTimeById(pos.getUnit_id());
             
-            TrackData oldTrack = utilT.getOlderTrack(pos.getUnit_id(), pos
-                    .internalGetTime_stamp());     
-            long timeToOldStart = Math.abs((pos.internalGetTime_stamp().getTime() - oldTrack.getStart().getTime()) / 1000);
-            long timeToOldEnd = Math.abs((pos.internalGetTime_stamp().getTime() - oldTrack.getEnd().getTime()) / 1000);
+            TrackData oldTrack = utilT.getOlderTrack(pos.getUnit_id(), pos.internalGetTimestamp());
+            long timeToOldStart = Math.abs((pos.internalGetTimestamp().getTime() - oldTrack.getStart().getTime()) / 1000);
+            long timeToOldEnd = Math.abs((pos.internalGetTimestamp().getTime() - oldTrack.getEnd().getTime()) / 1000);
             if (timeConst >  timeToOldStart || timeConst > timeToOldEnd){
                 utilT.addToTrack(oldTrack, pos);
                 return true;
             } else {
                 return false;
-            }            
+            }
         } catch (NoItemFoundException e) {
             return false;
         }
@@ -118,17 +114,16 @@ public class TrackSolver {
      */    
     private boolean tryToAddToNew() throws SQLException {
         try {        
-            timeConst = utilU.getUnitConfTimeById(pos.getUnit_id());            
-            TrackData newTrack = utilT.getNewerTrack(pos.getUnit_id(), pos
-                    .internalGetTime_stamp());     
-            long timeToNewStart = Math.abs((pos.internalGetTime_stamp().getTime() - newTrack.getStart().getTime()) / 1000);
-            long timeToNewEnd   = Math.abs((pos.internalGetTime_stamp().getTime() - newTrack.getStart().getTime()) / 1000);
+            timeConst = utilU.getUnitConfTimeById(pos.getUnit_id());
+            TrackData newTrack = utilT.getNewerTrack(pos.getUnit_id(), pos.internalGetTimestamp());
+            long timeToNewStart = Math.abs((pos.internalGetTimestamp().getTime() - newTrack.getStart().getTime()) / 1000);
+            long timeToNewEnd   = Math.abs((pos.internalGetTimestamp().getTime() - newTrack.getStart().getTime()) / 1000);
             if (timeConst > timeToNewEnd || timeConst > timeToNewStart){
                 utilT.addToTrack(newTrack, pos);
                 return true;
             } else {
                 return false;
-            }            
+            }
         } catch (NoItemFoundException e) {
             return false;
         }
@@ -140,32 +135,35 @@ public class TrackSolver {
      * @throws SQLException
      */
     private void tryToAddOldAndNew() throws SQLException {
-        boolean wasAdded = false;                
+        boolean wasAdded = false;
         
         TrackData oldTrack = null;
         TrackData newTrack = null;
         try {
              timeConst = utilU.getUnitConfTimeById(pos.getUnit_id());
-             oldTrack = utilT.getOlderTrack(pos.getUnit_id(), pos
-                    .internalGetTime_stamp());     
+             oldTrack = utilT.getOlderTrack(pos.getUnit_id(), pos.internalGetTimestamp());
         } catch (NoItemFoundException e) {
              if (tryToAddToNew()) {return; } 
-             else { utilT.startTrack(pos); return;} 
-             
-        }    
+             else { 
+            	utilT.startTrack(pos);
+            	return;
+            }
+        }
         try {
-            newTrack = utilT.getNewerTrack(pos.getUnit_id(), pos
-                    .internalGetTime_stamp());     
+            newTrack = utilT.getNewerTrack(pos.getUnit_id(), pos.internalGetTimestamp());
         } catch (NoItemFoundException e) {
-            if (tryToAddToOld()) {return; } else {utilT.startTrack(pos); return;}  
+            if (tryToAddToOld()) {
+            	return;
+            } else {
+            	utilT.startTrack(pos);
+            	return;
+            }
         }
         
-        /**Bouth track exists - */
+        /**Both track exists - */
         
-        long timeToNew = (newTrack.getStart().getTime() - pos
-                .internalGetTime_stamp().getTime()) / 1000;
-        long timeToOld = (pos.internalGetTime_stamp().getTime() - oldTrack.getEnd()
-                .getTime()) / 1000;
+        long timeToNew = (newTrack.getStart().getTime() - pos.internalGetTimestamp().getTime()) / 1000;
+        long timeToOld = (pos.internalGetTimestamp().getTime() - oldTrack.getEnd().getTime()) / 1000;
         
         //if (!wasAdded) utilT.startTrack(pos);
         if (timeToNew <= timeConst && timeToOld > timeConst) {

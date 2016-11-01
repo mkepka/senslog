@@ -3,6 +3,7 @@
  */
 package cz.hsrs.db.model.vgi;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -12,9 +13,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class VgiCategory {
 
+	@XmlElement(name = "categoryID")
     private int categoryId;
+    @XmlElement(name = "category_name")
     private String categoryName;
     private String description;
+    @XmlElement(name = "parentID")
     private Integer parentId; // top-level categories has NULL
     private Integer level;
     private Integer lft;

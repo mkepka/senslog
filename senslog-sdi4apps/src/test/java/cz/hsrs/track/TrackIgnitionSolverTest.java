@@ -21,7 +21,6 @@ import cz.hsrs.db.util.UnitUtil;
 
 public class TrackIgnitionSolverTest {
     
-    private static Statement stmt;
     private static long unit_id = 111;
     
     private static int on = 1;
@@ -125,7 +124,7 @@ public class TrackIgnitionSolverTest {
         p2.insertToDb();
         insObs(p2, 1);
         
-        TrackData d = u.getTrack(unit_id, p2.internalGetTime_stamp());
+        TrackData d = u.getTrack(unit_id, p2.internalGetTimestamp());
         Assert.assertEquals(2, u.getTrackLenght(d.getGid()));
         
         /** chcipnem */
@@ -146,7 +145,7 @@ public class TrackIgnitionSolverTest {
         
         p7.insertToDb();
         insObs(p7,0);
-        TrackData d2 = u.getTrack(unit_id, p5.internalGetTime_stamp());
+        TrackData d2 = u.getTrack(unit_id, p5.internalGetTimestamp());
         Assert.assertEquals(4, u.getTrackLenght(d2.getGid()));
         
         try {
@@ -162,27 +161,27 @@ public class TrackIgnitionSolverTest {
         TrackUtil u = new TrackUtil();
         
         p1.insertToDb();
-        o1 = new Observation(p1.internalGetTime_stamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o1 = new Observation(p1.internalGetTimestamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o1).solve();
         
         p2.insertToDb();
-        o2 = new Observation(p2.internalGetTime_stamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o2 = new Observation(p2.internalGetTimestamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o2).solve();
         
         p5.insertToDb();
-        o5 = new Observation(p5.internalGetTime_stamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o5 = new Observation(p5.internalGetTimestamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o5).solve();
         
         p6.insertToDb();
-        o6 = new Observation(p6.internalGetTime_stamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o6 = new Observation(p6.internalGetTimestamp(), 1.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o6).solve();
         
         p4.insertToDb();
-        o4 = new Observation(p4.internalGetTime_stamp(), 0.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o4 = new Observation(p4.internalGetTimestamp(), 0.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o4).solve();
         
         p3.insertToDb();
-        o3 = new Observation(p3.internalGetTime_stamp(), 0.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
+        o3 = new Observation(p3.internalGetTimestamp(), 0.0 , TrackIgnitionSolver.IGNITION_SENSOR_ID, unit_id);
         new TrackIgnitionSolver(o3).solve();
         
         Assert.assertTrue(true);
@@ -222,17 +221,17 @@ public class TrackIgnitionSolverTest {
         p5.insertToDb();
         insObs(p5, 1);
 
-        TrackData t1 = u.getTrack(unit_id, p1.internalGetTime_stamp());
+        TrackData t1 = u.getTrack(unit_id, p1.internalGetTimestamp());
         Assert.assertEquals(u.getTrackLenght(t1.getGid()),3);
         
-        TrackData t2 = u.getTrack(unit_id, p5.internalGetTime_stamp());
-        Assert.assertEquals(t2.getEnd(), p6.internalGetTime_stamp());
+        TrackData t2 = u.getTrack(unit_id, p5.internalGetTimestamp());
+        Assert.assertEquals(t2.getEnd(), p6.internalGetTimestamp());
         Assert.assertEquals(u.getTrackLenght(t2.getGid()),4);
     }
     
 
     private void insObs(UnitPosition p, double status) throws SQLException{
-        Observation o = new Observation(p.internalGetTime_stamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
+        Observation o = new Observation(p.internalGetTimestamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
         new TrackIgnitionSolver(o).solve();
     }
     

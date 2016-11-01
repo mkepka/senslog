@@ -91,16 +91,16 @@ public class TrackIgnitionTest {
 		p6.insertToDb();		
 		insObs(p6, 1);
 		
-		TrackData t1 = u.getTrack(unit_id, p1.internalGetTime_stamp());
+		TrackData t1 = u.getTrack(unit_id, p1.internalGetTimestamp());
 		Assert.assertEquals(3, u.getTrackLenght(t1.getGid()));
 		
-		TrackData t2 = u.getTrack(unit_id, p5.internalGetTime_stamp());
+		TrackData t2 = u.getTrack(unit_id, p5.internalGetTimestamp());
 		//Assert.assertEquals(t2.getEnd(), p6.internalGetTime_stamp());
 		Assert.assertEquals(3, u.getTrackLenght(t2.getGid()));
 	}
 	
 	private void insObs(UnitPosition p, double status) throws SQLException{
-		Observation o = new Observation(p.internalGetTime_stamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
+		Observation o = new Observation(p.internalGetTimestamp(), status , TrackIgnitionSolver.IGNITION_SENSOR_ID, p.getUnit_id());
 		new TrackIgnitionSolver(o).solve();
 	}
 	

@@ -22,6 +22,7 @@ public class SQLExecutor {
     private static String UnitsLastPositions_table;
     
     private static String Brand_picture;
+    private static Boolean Altitude_enabled;
     private static Boolean Last_value;
     private static Boolean Vgi_observation;
     private static String configfile = null;
@@ -82,6 +83,8 @@ public class SQLExecutor {
         UnitsTracks_table = prop.getProperty("UnitsTracks_table");
         UnitsLastPositions_table = prop.getProperty("UnitsLastPositions_table");
         Brand_picture = prop.getProperty("Brand_picture");
+        // datamodel properties
+        Altitude_enabled = Boolean.parseBoolean(prop.getProperty("Altitude_enabled", "false"));
         Last_value = Boolean.parseBoolean(prop.getProperty("Last_value_enabled"));
         Vgi_observation = Boolean.parseBoolean(prop.getProperty("Vgi_observation_enabled"));
     }
@@ -194,6 +197,14 @@ public class SQLExecutor {
      */
     public static String getBrand_picture_name(){
         return Brand_picture;
+    }
+    
+    /**
+     * Method returns boolean if storing of point altitude is enabled
+     * @return true if storing altitude is enabled, false if not
+     */
+    public static boolean isAltitudeEnabled(){
+    	return Altitude_enabled;
     }
     
     /**

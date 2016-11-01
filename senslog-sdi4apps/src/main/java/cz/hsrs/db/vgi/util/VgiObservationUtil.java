@@ -27,6 +27,7 @@ public class VgiObservationUtil {
     
     /**
      * Method inserts new VGI Observation object to the DB by given attributes
+     * @param gid - ID of position
      * @param timestamp - Time stamp when observation was recorded - mandatory
      * @param categoryId - Id of VgiCategory - mandatory
      * @param description - Detailed description of observation - optional
@@ -37,31 +38,19 @@ public class VgiObservationUtil {
      * @return ID of inserted observation as integer
      * @throws SQLException
      */
-    public static int insertVgiObs(String timestamp, Integer categoryId, String description, 
+    public static int insertVgiObs(int gid, String timestamp, Integer categoryId, String description, 
             String attributes, long unitId, int userId, int datasetId) throws SQLException{
         int newId = getNextVgiObsID();
         
         StringBuffer ins = new StringBuffer();
-        ins.append("INSERT INTO "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+"(obs_vgi_id, time_stamp, category_id,"
+        ins.append("INSERT INTO "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+"(obs_vgi_id, gid, time_stamp, category_id,"
                 + " description, attributes, dataset_id, unit_id, user_id) VALUES(");
         ins.append(newId+", ");
+        ins.append(gid+", ");
         ins.append("'"+timestamp+"', ");
         ins.append(categoryId+", ");
-        if(description == null){
-            ins.append("NULL, ");
-        }
-        else{
-            ins.append("'"+description+"', ");
-        }
-        if(attributes == null){
-            ins.append("NULL, ");
-        }
-        else if(attributes != null && attributes.isEmpty()){
-            ins.append("NULL, ");
-        }
-        else{
-            ins.append("'"+attributes+"', ");
-        }
+        ins.append(description == null ? "NULL, " : "'"+description+"', ");
+        ins.append((attributes == null) || (attributes != null && attributes.isEmpty()) ? "NULL, " : "'"+attributes+"', ");
         ins.append(datasetId+", ");
         ins.append(unitId+", ");
         ins.append(userId+"); ");
@@ -77,6 +66,7 @@ public class VgiObservationUtil {
     /**
      * Method updates VGIObservation objects by given attributes
      * @param obsId - ID of VGIObservation object to be updated
+     * @param gid - ID of position
      * @param timestamp - Time stamp when observation was recorded - mandatory
      * @param categoryId - Id of VgiCategory - mandatory
      * @param description - Detailed description of observation - optional
@@ -87,30 +77,21 @@ public class VgiObservationUtil {
      * @return true if the VGIObservation object was updated
      * @throws SQLException
      */
-    public static boolean updateVgiObs(int obsId, String timestamp, Integer categoryId, String description, 
+    public static boolean updateVgiObs(int obsId, int gid, String timestamp, Integer categoryId, String description, 
             String attributes, long unitId, int userId, int datasetId) throws SQLException{
-        
-        StringBuffer ins = new StringBuffer();
-        ins.append("UPDATE "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" SET ");
-        if(timestamp != null){
-            ins.append("time_stamp = '"+timestamp+"', ");
-        }
-        if(categoryId != null){
-            ins.append("category_id = "+categoryId+", ");
-        }
-        if(description != null){
-            ins.append("description = '"+description+"', ");
-        }
-        if(attributes != null && !attributes.isEmpty()){
-            ins.append("attributes = '"+attributes+"', ");
-        }
-        ins.append("dataset_id = "+datasetId+", ");
-        ins.append("unit_id = "+unitId+", ");
-        ins.append("user_id = "+userId+" ");
-        
-        ins.append("WHERE obs_vgi_id = "+obsId+";");
-        
         try{
+            StringBuffer ins = new StringBuffer();
+            ins.append("UPDATE "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" SET ");
+            ins.append("gid = "+gid+", ");
+            ins.append(timestamp != null ? "time_stamp = '"+timestamp+"', " : "");
+            ins.append(categoryId != null ? "category_id = "+categoryId+", " : "");
+            ins.append(description != null ? "description = '"+description+"', " : "");
+            ins.append((attributes != null && !attributes.isEmpty()) ? "attributes = '"+attributes+"', " : "");
+            ins.append("dataset_id = "+datasetId+", ");
+            ins.append("unit_id = "+unitId+", ");
+            ins.append("user_id = "+userId+" ");
+            ins.append("WHERE obs_vgi_id = "+obsId+";");
+            
             String query = ins.toString();
             SQLExecutor.executeUpdate(query);
             return true;
@@ -120,41 +101,15 @@ public class VgiObservationUtil {
     }
     
     /**
-     * Method selects VgiObservation object by given ID in GeoJSON format
-     * @param obsId - ID of VgiObservation object
-     * @param userId - ID of user that owns given VgiObservation object
-     * @return VgiObservation object in GeoJSON format as JSONObject
-     * @throws SQLException
-     */
-    public JSONObject getVgiObservationByObsIdAsGeoJSON(int obsId, int userId) throws SQLException{
-        try{
-            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                    + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                    + " WHERE ov.user_id = "+userId+""
-                    + " AND ov.obs_vgi_id = "+obsId+""
-                    + " AND ov.gid = up.gid;";
-            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
-            JSONObject vgiObs = convertVgiObservationResultSet2GeoJSON(res);
-            return vgiObs;
-         } catch(SQLException e){
-            throw new SQLException(e.getMessage());
-        }
-    }
-    
-    /**
      * Method gets specific VGIObservation object by given ID
      * @param obsId - ID of VgiObservation object
      * @param userId - ID of user that owns VgiObservation object
-     * @return VgiObservation object or null
+     * @return VgiObservation object or null if any was not found
      * @throws SQLException
      */
     public VgiObservation getVgiObservationByObsId(int obsId, int userId) throws SQLException{
         try{
-            String query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                    + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                    + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
+            String query = VgiObservation.SELECT_ATTRIBUTES
                     + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
                     + " WHERE ov.user_id = "+userId+""
                     + " AND ov.obs_vgi_id = "+obsId+""
@@ -172,13 +127,39 @@ public class VgiObservationUtil {
                         res.getLong("unit_id"),
                         res.getInt("user_id"),
                         res.getString("time_received"),
-                        res.getInt("media_count"));
+                        res.getInt("media_count"),
+                        res.getDouble("st_x"),
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 return obs;
             }
             else{
                 return null;
             }
         } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
+     * Method selects VgiObservation object by given ID in GeoJSON format
+     * @param obsId - ID of VgiObservation object
+     * @param userId - ID of user that owns given VgiObservation object
+     * @return VgiObservation object in GeoJSON format as JSONObject
+     * @throws SQLException
+     */
+    public JSONObject getVgiObservationByObsIdAsGeoJSON(int obsId, int userId) throws SQLException{
+        try{
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.user_id = "+userId+""
+                    + " AND ov.obs_vgi_id = "+obsId+""
+                    + " AND ov.gid = up.gid;";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            JSONObject vgiObs = convertVgiObservationResultSet2GeoJSON(res);
+            return vgiObs;
+         } catch(SQLException e){
             throw new SQLException(e.getMessage());
         }
     }
@@ -193,39 +174,23 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUser(int userId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        +";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -243,7 +208,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -262,39 +229,23 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserAsJSON(int userId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+            		+ " WHERE ov.gid = up.gid"
+            		+ " AND ov.user_id = "+userId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -315,43 +266,24 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUserByCategory(int userId, int categoryId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " ov.user_id = "+userId+""
+                    + " AND ov.category_id = "+categoryId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -369,7 +301,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -389,43 +323,24 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserByCategoryAsJSON(int userId, int categoryId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.category_id = "+categoryId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        +";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -446,43 +361,24 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUserByDataset(int userId, int datasetId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.dataset_id = "+datasetId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -500,7 +396,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -520,43 +418,24 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserByDatasetAsJSON(int userId, int datasetId, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.dataset_id = "+datasetId+"";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -577,43 +456,24 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUserByExtent(int userId, Envelope2D extent, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -631,7 +491,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -651,43 +513,24 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserByExtentAsJSON(int userId, Envelope2D extent, String fromTime, String toTime) throws SQLException {
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query 
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -709,47 +552,25 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUserByDatasetByExtent(int userId, int datasetId, Envelope2D extent, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.dataset_id = "+datasetId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -767,7 +588,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -788,47 +611,25 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserByDatasetByExtentAsJSON(int userId, int datasetId, Envelope2D extent, String fromTime, String toTime) throws SQLException {
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.dataset_id = "+datasetId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query 
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -850,51 +651,26 @@ public class VgiObservationUtil {
      */
     public List<VgiObservation> getVgiObservationsByUserByCategoryByDatasetByExtent(int userId, int categoryId, int datasetId, Envelope2D extent, String fromTime, String toTime) throws SQLException{
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.category_id = "+categoryId+""
+                    + " AND ov.dataset_id = "+datasetId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, ST_X(up.the_geom), ST_Y(up.the_geom)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<VgiObservation> vgiObsList = new LinkedList<VgiObservation>();
@@ -912,7 +688,9 @@ public class VgiObservationUtil {
                         res.getString("time_received"),
                         res.getInt("media_count"),
                         res.getDouble("st_x"),
-                        res.getDouble("st_y"));
+                        res.getDouble("st_y"),
+                        res.getDouble("altitude"),
+                        res.getDouble("dop"));
                 vgiObsList.add(obs);
             }
             return vgiObsList;
@@ -933,51 +711,26 @@ public class VgiObservationUtil {
      */
     public List<JSONObject> getVgiObservationsByUserByCategoryByDatasetByExtentAsJSON(int userId, int categoryId, int datasetId, Envelope2D extent, String fromTime, String toTime) throws SQLException {
         try{
-            String query;
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.category_id = "+categoryId+""
+                    + " AND ov.dataset_id = "+datasetId+""
+                    + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")";
             if(fromTime == null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + ";";
             } else if(fromTime == null && toTime != null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query 
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             } else if(fromTime != null && toTime == null){
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
-                        + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.gid = up.gid;";
+                query = query
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
             } else{
-                query = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp, ov.category_id,"
-                        + " ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
-                        + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10)"
-                        + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-                        + " WHERE ov.user_id = "+userId+""
-                        + " AND ov.category_id = "+categoryId+""
-                        + " AND ov.dataset_id = "+datasetId+""
-                        + " AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")"
+                query = query 
                         + " AND ov.time_stamp >= '"+fromTime+"'"
-                        + " AND ov.time_stamp <= '"+toTime+"'"
-                        + " AND ov.gid = up.gid;";
+                        + " AND ov.time_stamp <= '"+toTime+"';";
             }
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
@@ -1052,6 +805,9 @@ public class VgiObservationUtil {
             properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
             properties.put("time_stamp", res.getString("time_stamp"));
             properties.put("unit_id", res.getLong("unit_id"));
+            properties.put("time_received", res.getString("time_received"));
+            properties.put("altitude", res.getDouble("altitude"));
+            properties.put("dop", res.getDouble("dop"));
             feature.put("properties", properties);
             return feature;
         }
@@ -1081,9 +837,12 @@ public class VgiObservationUtil {
             properties.put("dataset_id", res.getInt("dataset_id"));
             properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
             properties.put("media_count", res.getInt("media_count"));
-            properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
+            properties.put("obsID", res.getInt("obs_vgi_id"));
             properties.put("time_stamp", res.getString("time_stamp"));
             properties.put("unit_id", res.getLong("unit_id"));
+            properties.put("time_received", res.getString("time_received"));
+            properties.put("altitude", res.getDouble("altitude"));
+            properties.put("dop", res.getDouble("dop"));
             feature.put("properties", properties);
             
             vgiObsList.add(feature);

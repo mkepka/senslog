@@ -3,14 +3,22 @@ package cz.hsrs.db.model.vgi;
 import java.text.ParseException;
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import cz.hsrs.db.util.DateUtil;
 
+@XmlRootElement
 public class VgiMedia {
 
+	@XmlElement(name = "medID")
     private int mediaId;
+	@XmlElement(name = "obsID")
     private int obsId;
+	@XmlElement(name = "received_time")
     private String timeReceivedString;
     private Date timeReceived;
+    @XmlElement(name = "observed_media")
     private byte[] observedMedia;
     private String datatype;
     

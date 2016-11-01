@@ -149,8 +149,20 @@ public class RestUtil {
             atts.accumulate("observedproperty", meas.getString("observedproperty"));
             atts.accumulate("value", meas.getDouble("value"));
             atts.accumulate("uom", meas.getString("uom"));
-            int obs_id = orUtil.processInsertVgiObs(meas.getString("measure_time"), 2, "measurement from CITI-sense", 
-                    atts.toString(), 8L, "citi", 1, "10.48154", "59.41901", null, null);
+            int obs_id = orUtil.processInsertVgiObs(
+            		meas.getString("measure_time"),
+            		2,
+            		"measurement from CITI-sense",
+            		atts.toString(),
+            		8L,
+            		"citi",
+            		1,
+            		"10.48154", 
+            		"59.41901",
+            		null,
+            		null, 
+            		null, 
+            		null);
             System.out.println(obs_id);
         }
         buff.close();

@@ -18,6 +18,8 @@ public class VgiObservation {
     private Integer gid;
     private Double x;
     private Double y;
+    private Double altitude;
+    private Double dop;
     @XmlElement(name = "time_stamp")
     private String timeString;
     @XmlElement(name = "category_id")
@@ -36,12 +38,55 @@ public class VgiObservation {
     private int mediaCount;
     
     /**
-     * Empty constructor
+     * Prepared list of attributes to be select from DB in following order:
+     * ov.obs_vgi_id
+     * ov.gid
+     * ov.time_stamp
+     * ov.category_id
+     * ov.description
+     * ov.attributes
+     * ov.dataset_id
+     * ov.unit_id
+     * ov.user_id
+     * ov.time_received
+     * ov.media_count
+     * st_x(up.the_geom)
+     * st_y(up.the_geom)
+     * up.altitude
+     * up.dop
+     */
+    public static final String SELECT_ATTRIBUTES = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp,"
+    		+ " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+            + " ov.time_received, ov.media_count, st_x(up.the_geom), st_y(up.the_geom), up.altitude, up.dop";
+    /**
+     * Prepared list of attributes to be select from DB for GeoJSON in following order:
+     * ov.obs_vgi_id
+     * ov.gid
+     * ov.time_stamp
+     * ov.category_id
+     * ov.description
+     * ov.attributes
+     * ov.dataset_id
+     * ov.unit_id
+     * ov.user_id
+     * ov.time_received
+     * ov.media_count
+     * st_asgeojson(up.the_geom, 10)
+     * up.altitude
+     * up.dop
+     */
+    public static final String SELECT_ATTRIBUTES_GEOJSON = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp,"
+    		+ " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+            + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10), up.altitude, up.dop";
+    
+    /**
+     * Empty constructor for serialization
      */
     public VgiObservation(){
     }
     
     /**
+     * Constructor creates object from given fields 
      * @param obsVgiId
      * @param gid
      * @param timeString
@@ -71,10 +116,29 @@ public class VgiObservation {
         this.mediaCount = mediaCount;
     }
 
+    /**
+     * Constructor creates object from given fields
+     * @param obsVgiId
+     * @param gid
+     * @param timeString
+     * @param categoryId
+     * @param description
+     * @param attributes
+     * @param datasetId
+     * @param unitId
+     * @param userId
+     * @param timeReceived
+     * @param mediaCount
+     * @param xCoord
+     * @param yCoord
+     * @param altitude
+     * @param dop
+     */
     public VgiObservation(int obsVgiId, Integer gid, String timeString,
             int categoryId, String description, String attributes,
             int datasetId, long unitId, int userId, String timeReceived,
-            int mediaCount, double xCoord, double yCoord) {
+            int mediaCount, double xCoord, double yCoord, double altCoord, 
+            double dop) {
         this.obsVgiId = obsVgiId;
         this.gid = gid;
         this.timeString = timeString;
@@ -88,6 +152,8 @@ public class VgiObservation {
         this.mediaCount = mediaCount;
         this.x = xCoord;
         this.y = yCoord;
+        this.altitude = altCoord;
+        this.dop = dop;
     }
     
     /**
@@ -183,6 +249,21 @@ public class VgiObservation {
     	return this.y;
     }
     
+    /**
+     * 
+     * @return
+     */
+    public Double getAltitude(){
+    	return this.altitude;
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public Double getDOP(){
+    	return this.dop;
+    }
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
      */
@@ -193,6 +274,7 @@ public class VgiObservation {
                 + ", description=" + description + ", attributes=" + attributes
                 + ", datasetId=" + datasetId + ", unitId=" + unitId
                 + ", userId=" + userId + ", timeReceived=" + timeReceived
-                + ", mediaCount=" + mediaCount + ", x="+x+", y="+y+"]";
+                + ", mediaCount=" + mediaCount + ", x="+x+", y="+y
+                + ", altitude="+altitude+", dop="+dop+"]";
     }
 }

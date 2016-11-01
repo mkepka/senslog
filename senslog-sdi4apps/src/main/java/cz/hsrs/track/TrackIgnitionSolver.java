@@ -88,7 +88,6 @@ public class TrackIgnitionSolver {
             return false;
         }
     }
-
     
     /**
      * 
@@ -137,14 +136,13 @@ public class TrackIgnitionSolver {
     private void solveEngineWasOn() throws SQLException {
         
         try {
-            TrackData td = getOlderTrack(position.getUnit_id(), position.internalGetTime_stamp());
+            TrackData td = getOlderTrack(position.getUnit_id(), position.internalGetTimestamp());
             if (!util.wasEngineOn(position.getUnit_id(), td.getEnd(), observationBefore.getTimeStamp())){
                 util.startTrack(position);
             } else {
                 solveInsertToTrack();
             }
         } catch (NoItemFoundException e) {
-            // TODO Auto-generated catch block
             util.startTrack(position);
         }
     }

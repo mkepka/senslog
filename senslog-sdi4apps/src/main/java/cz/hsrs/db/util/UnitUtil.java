@@ -17,14 +17,20 @@ import cz.hsrs.db.model.custom.DBItemInfo;
 import cz.hsrs.db.pool.SQLExecutor;
 import cz.hsrs.db.util.factory.UnitPositionFactory;
 
+/**
+ * Utility class concentrates method for unit and all related objects
+ * @author mkepka
+ *
+ */
 public class UnitUtil extends DBUtil {
-    
+
+	private static final String SENSLOG_SCHEMA_NAME = "public";
     private final SimpleDateFormat formater = new SimpleDateFormat(
     "yyyy-MM-dd HH:mm:ssZ");
 
     public UnitUtil() {
         super();
-    }        
+    }
 
     public int deleteUnit(long unit_id) throws SQLException {
         String delete_unit = "DELETE FROM units WHERE unit_id = " + unit_id + ";";
@@ -97,31 +103,40 @@ public class UnitUtil extends DBUtil {
         return res.next();
     }
 
-    public UnitPosition getLastUnitPosition(long unit_id) throws SQLException,
-            NoItemFoundException {
+    /**
+     * 
+     * @param unit_id
+     * @return
+     * @throws SQLException
+     * @throws NoItemFoundException
+     */
+    public UnitPosition getLastUnitPosition(long unit_id) throws SQLException, NoItemFoundException {
         // pridat select i z units_to_groups
-        String queryConf = "select " + UnitPosition.SELECT
-                + "from last_units_positions where unit_id =" + unit_id;
+        String queryConf = "SELECT " + UnitPosition.SELECT
+                + "FROM "+SENSLOG_SCHEMA_NAME+".last_units_positions WHERE unit_id =" + unit_id;
         ResultSet res = stmt.executeQuery(queryConf);
         if (res.next()) {
             return new UnitPosition(res);
         } else
-            throw new NoItemFoundException("Last position for " + unit_id
-                    + " not found.");
+            throw new NoItemFoundException("Last position for " + unit_id + " not found.");
     }
-
     
-    public UnitPosition getPositionByGid(int gid) throws SQLException,
-            NoItemFoundException {
+    /**
+     * Method selects unit_position by given GID
+     * @param gid - ID of position
+     * @return UnitPosition object
+     * @throws SQLException
+     * @throws NoItemFoundException
+     */
+    public UnitPosition getPositionByGid(int gid) throws SQLException, NoItemFoundException {
         // pridat select i z units_to_groups
-        String queryConf = "select " + UnitPosition.SELECT
-                + "from units_positions where gid =" + gid;
+        String queryConf = "SELECT " + UnitPosition.SELECT
+                + "FROM "+SENSLOG_SCHEMA_NAME+".units_positions WHERE gid = " + gid;
         ResultSet res = stmt.executeQuery(queryConf);
         if (res.next()) {
             return new UnitPosition(res);
         } else
-            throw new NoItemFoundException("Last position for " + gid
-                    + " not found.");
+            throw new NoItemFoundException("Last position for " + gid + " not found.");
     }
 
     public int changeUnitsTrackInterval(long unit_id, int milliseconds)
@@ -146,7 +161,8 @@ public class UnitUtil extends DBUtil {
                     + " not found.");
     }
 
-    public List<UnitDriver> getUnitDrivers(long unit_id) throws SQLException {
+    @SuppressWarnings("unchecked")
+	public List<UnitDriver> getUnitDrivers(long unit_id) throws SQLException {
 
         String queryObservations = "select * "
                 + " from unit_drivers, units_to_drivers "

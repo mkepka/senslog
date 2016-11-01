@@ -120,13 +120,13 @@ public class TrackSolverTest {
 		TrackUtil util = new TrackUtil();
 		try {
 			TrackData t1 = util
-					.getTrack(unitid, pos1A.internalGetTime_stamp());
+					.getTrack(unitid, pos1A.internalGetTimestamp());
 			TrackData t2 = util
-					.getTrack(unitid, pos1B.internalGetTime_stamp());
+					.getTrack(unitid, pos1B.internalGetTimestamp());
 			TrackData t3 = util
-					.getTrack(unitid, pos1C.internalGetTime_stamp());
+					.getTrack(unitid, pos1C.internalGetTimestamp());
 			TrackData t4 = util
-					.getTrack(unitid, pos1D.internalGetTime_stamp());
+					.getTrack(unitid, pos1D.internalGetTimestamp());
 			Assert.assertEquals(t1.getGid(), t2.getGid());
 			Assert.assertEquals(t3.getGid(), t4.getGid());
 		} catch (NoItemFoundException e) {
@@ -148,13 +148,13 @@ public class TrackSolverTest {
 		TrackUtil util = new TrackUtil();
 		try {
 			TrackData t0A = util.getTrack(unitid, pos0A
-					.internalGetTime_stamp());
+					.internalGetTimestamp());
 			TrackData t0B = util.getTrack(unitid, pos0B
-					.internalGetTime_stamp());
+					.internalGetTimestamp());
 			TrackData t1A = util.getTrack(unitid, pos1A
-					.internalGetTime_stamp());
+					.internalGetTimestamp());
 			TrackData t1B = util.getTrack(unitid, pos1B
-					.internalGetTime_stamp());
+					.internalGetTimestamp());
 
 			Assert.assertEquals(t0A.getGid(), t0B.getGid());
 			Assert.assertEquals(t1A.getGid(), t1B.getGid());
@@ -191,7 +191,7 @@ public class TrackSolverTest {
 		solve(pos1C);
 		solve(pos1D);
 
-		TrackData td = tu.getTrack(unitid, pos1D.internalGetTime_stamp());
+		TrackData td = tu.getTrack(unitid, pos1D.internalGetTimestamp());
 		int l = tu.getTrackLenght(td.getGid());
 		Assert.assertEquals(6, l);
 	}

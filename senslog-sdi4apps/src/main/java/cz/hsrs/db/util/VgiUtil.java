@@ -12,19 +12,17 @@ import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import cz.hsrs.db.model.vgi.VgiMedia;
 import cz.hsrs.db.pool.SQLExecutor;
 
 public class VgiUtil {
 	
+	/*
     private static final String SCHEMA_NAME = "vgi";
     private static final String DATASET_TABLE_NAME = "vgi_datasets";
-    
+    */
     /**
      * Method inserts new POI to database and returns Id of this new POI
      * @param titleValue String with value of Title parameter - need not be NULL

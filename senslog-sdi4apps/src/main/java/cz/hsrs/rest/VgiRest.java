@@ -247,6 +247,8 @@ public class VgiRest {
             @FormDataParam("unitId") Long unitIdValue,
             @FormDataParam("lon") String lonValue,
             @FormDataParam("lat") String latValue,
+            @FormDataParam("alt") String altValue,
+            @FormDataParam("dop") String dopValue,
             @FormDataParam("media") InputStream fileInStream,
             @FormDataParam("media") FormDataContentDisposition fileDetail,
             @FormDataParam("media_type") String mediaType,
@@ -263,13 +265,15 @@ public class VgiRest {
 
             if(obsId == null){
                 int newObsId = orUtil.processInsertVgiObs(timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream, mediaType);
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
+                        fileInStream, mediaType);
                 return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
                         .build();
             }
             else{
                 boolean inserted = orUtil.processUpdateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, fileInStream, mediaType);
+                        unitIdValue, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
+                        fileInStream, mediaType);
                 return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
                         .build();
             }
