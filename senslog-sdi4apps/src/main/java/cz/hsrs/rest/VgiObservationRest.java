@@ -66,7 +66,7 @@ public class VgiObservationRest {
      * @param userName - name of user that produced the observation, mandatory
      * @return ID of registered VgiObservation object
      */
-    @Path("/")
+    //@Path("/") // not necessary to specify Path
     @POST
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response insertObservation(
@@ -252,7 +252,7 @@ public class VgiObservationRest {
     
     /**
      * Service for selecting VGIObservations by given filter parameters
-     * URL: /rest/vgi/observation?user_name=&format=&dataset_id=&category_id=&fromTime=&toTime=
+     * URL: /rest/vgi/observation?user_name=&format=&dataset_id=&category_id=&fromTime=&toTime=&extent=&unit_id=
      * @param userName - name of user, mandatory
      * @param format - format of the response (optional), Values: geojson/json/null
      * @param datasetId - ID of VgiDataset, optional
@@ -262,7 +262,7 @@ public class VgiObservationRest {
      * @param extent - Array of coordinates representing BBOX of map window, format: [xmin, ymin, xmax, ymax, SRID]
      * @return
      */
-    @Path("/")
+    //@Path("/") // not necessary to specify Path
     @GET
     public Response selectVgiObservations(
             @QueryParam("user_name") String userName,
@@ -271,13 +271,14 @@ public class VgiObservationRest {
             @QueryParam("category_id") Integer categoryId,
             @QueryParam("fromTime") String fromTime,
             @QueryParam("toTime") String toTime,
-            @QueryParam("extent") String extent){
+            @QueryParam("extent") String extent,
+            @QueryParam("unit_id") Long unitId){
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         try{
             if(userName != null){
                 // response in GeoJSON
                 if(format != null && format.equalsIgnoreCase("geojson")){
-                    JSONObject featureColl = orUtil.processGetVgiObservationsByUserAsJson(userName, fromTime, toTime, datasetId, categoryId, extent);
+                    JSONObject featureColl = orUtil.processGetVgiObservationsByUserAsJson(userName, fromTime, toTime, datasetId, categoryId, extent, unitId);
                     return Response.ok(featureColl, MediaType.APPLICATION_JSON+";charset=utf-8")
                             .build();
                 }

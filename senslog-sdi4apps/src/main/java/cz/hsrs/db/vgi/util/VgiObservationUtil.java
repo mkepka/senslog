@@ -543,6 +543,44 @@ public class VgiObservationUtil {
     /**
      * Method selects List of VgiObservation objects by given filter parameters 
      * @param userId - ID of user that owns VgiObservation
+     * @param unitId - ID of unit that produced VgiObservation
+     * @param fromTime - beginning of time frame, optional
+     * @param toTime - end of time frame, optional
+     * @return List of VgiObservations in GeoJSON format
+     * @throws SQLException 
+     */
+	public List<JSONObject> getVgiObservationsByUserByUnitAsJSON(int userId, long unitId, String fromTime, String toTime) throws SQLException {
+		try{
+            String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+""
+                    + " AND ov.unit_id = "+unitId;
+            if(fromTime == null && toTime == null){
+                query = query
+                        + ";";
+            } else if(fromTime == null && toTime != null){
+                query = query 
+                        + " AND ov.time_stamp <= '"+toTime+"';";
+            } else if(fromTime != null && toTime == null){
+                query = query 
+                        + " AND ov.time_stamp >= '"+fromTime+"';";
+            } else{
+                query = query 
+                        + " AND ov.time_stamp >= '"+fromTime+"'"
+                        + " AND ov.time_stamp <= '"+toTime+"';";
+            }
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
+            return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+	}
+    
+    /**
+     * Method selects List of VgiObservation objects by given filter parameters 
+     * @param userId - ID of user that owns VgiObservation
      * @param datasetId - ID of VgiDataset 
      * @param extent - spatial extent that features should intersect 
      * @param fromTime - beginning of time frame, optional

@@ -68,7 +68,7 @@ public class VgiDatasetRest {
      * @param userName - name of user
      * @return
      */
-    @Path("/insert")
+    //@Path("/") // not necessary to specify Path
     @POST
     @Consumes(MediaType.APPLICATION_JSON+";charset=utf-8")
     public Response insertDataset(String payload, @QueryParam("user_name") String userName){
@@ -132,7 +132,7 @@ public class VgiDatasetRest {
      * @param userName - name of user
      * @return List of VGIDatasets associated to the user as JSON
      */
-    @Path("/select")
+    //@Path("/") // not necessary to specify Path
     @GET
     public Response selectVgiDatasets(@QueryParam("user_name") String userName){
         try{

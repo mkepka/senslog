@@ -334,11 +334,12 @@ public class VgiObservationRestUtil {
      * @param toTime - end of time range, ISO 8601 pattern, optional
      * @param datasetId - ID of VgiDataset, optional
      * @param categoryId - ID of VgiCategeory, optional
+     * @param unitId - Id of device that produced VgiObservations
      * @return VgiObservation objects in GeoJSON format
      * @throws SQLException
      */
     public JSONObject processGetVgiObservationsByUserAsJson(String userName, String fromTime, String toTime, 
-            Integer datasetId, Integer categoryId, String extentArr) throws SQLException{
+            Integer datasetId, Integer categoryId, String extentArr, Long unitId) throws SQLException{
         try{
             int userId = userUt.getUserId(userName);
             String from = null;
@@ -352,24 +353,27 @@ public class VgiObservationRestUtil {
                 to = DateUtil.formatMiliSecsTZ.format(toDate);
             }
             List<JSONObject> obsList = null;
-            if(datasetId == null && categoryId == null && extentArr == null){
+            if(datasetId == null && categoryId == null && extentArr == null && unitId == null){
                 obsList = oUtil.getVgiObservationsByUserAsJSON(userId, from, to);
             }
-            else if(datasetId != null && categoryId == null && extentArr == null){
+            else if(datasetId != null && categoryId == null && extentArr == null && unitId == null){
                 obsList = oUtil.getVgiObservationsByUserByDatasetAsJSON(userId, datasetId, from, to);
             }
-            else if(datasetId == null && categoryId != null && extentArr == null){
+            else if(datasetId == null && categoryId != null && extentArr == null && unitId == null){
                 obsList = oUtil.getVgiObservationsByUserByCategoryAsJSON(userId, categoryId, from, to);
             }
-            else if(datasetId == null && categoryId == null && extentArr != null){
+            else if(datasetId == null && categoryId == null && extentArr != null && unitId == null){
                 Envelope2D extent = new Envelope2D(extentArr);
                 obsList = oUtil.getVgiObservationsByUserByExtentAsJSON(userId, extent, from, to);
             }
-            else if(datasetId != null && categoryId == null && extentArr != null){
+            else if(datasetId == null && categoryId == null && extentArr == null && unitId != null){
+            	obsList = oUtil.getVgiObservationsByUserByUnitAsJSON(userId, unitId, from, to);
+            }
+            else if(datasetId != null && categoryId == null && extentArr != null && unitId == null){
                 Envelope2D extent = new Envelope2D(extentArr);
                 obsList = oUtil.getVgiObservationsByUserByDatasetByExtentAsJSON(userId, datasetId, extent, from, to);
             }
-            else if(datasetId != null && categoryId != null && extentArr != null){
+            else if(datasetId != null && categoryId != null && extentArr != null && unitId == null){
                 Envelope2D extent = new Envelope2D(extentArr);
                 obsList = oUtil.getVgiObservationsByUserByCategoryByDatasetByExtentAsJSON(userId, categoryId, datasetId, extent, fromTime, toTime);
             }

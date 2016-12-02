@@ -101,7 +101,7 @@ public class VgiCategoryRest {
      * @param userName - name of user
      * @return List of VgiCategory objects as JSON
      */
-    @Path("/select")
+    //@Path("/") // not necessary to specify Path
     @GET
     public Response selectCategories(@QueryParam("user_name") String userName){
         try{
