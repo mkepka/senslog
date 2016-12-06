@@ -40,6 +40,7 @@ public class VgiParams {
     public static final String MEDIA_ID_NAME = "media_id";
     public static final String MEDIA_TYPE_NAME = "media_type";
     public static final String MEDIA_COUNT_NAME = "media_count";
+    public static final String OBSERVED_MEDIA_NAME = "observed_media";
     
     public static final String USER_NAME = "user_name";
     public static final String USER_ID_NAME = "user_id";

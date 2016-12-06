@@ -134,4 +134,35 @@ public class VgiMediaUtil {
             throw new SQLException(e.getMessage());
         }
     }
+
+    /**
+     * Method provides selection of media file thumbnail that is stored in DB
+     * @param obsId - ID of VgiObservation
+     * @param mediaId - Id of media file
+     * @return VgiMedia object containing only thumbnail as bytea  
+     * @throws SQLException
+     */
+	public VgiMedia getVgiMediaThumbnail(Integer obsId, Integer mediaId) throws SQLException {
+        try{
+            String select = "SELECT med_id, obs_vgi_id, time_received, media_datatype, thumbnail"
+                    + " FROM "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
+                    + " WHERE med_id = "+mediaId+""
+                    + " AND obs_vgi_id = "+obsId+";"; 
+            ResultSet rs = SQLExecutor.getInstance().executeQuery(select);
+            if (rs.next()) {
+                VgiMedia medium = new VgiMedia(
+                        rs.getInt("med_id"),
+                        rs.getInt("obs_vgi_id"),
+                        rs.getString("time_received"),
+                        rs.getString("media_datatype"),
+                        rs.getBytes("observed_media"));
+                return medium;
+            }
+            else{
+                throw new SQLException("VgiMedia with given ID cannot be selected!");
+            }
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
 }

@@ -72,8 +72,8 @@ public class VgiObservationRest {
      */
     //@Path("/") // not necessary to specify Path
     @POST
-    //@Consumes("multipart/form-data; charset=UTF-8")
-    @Consumes("multipart/form-data")
+    @Consumes("multipart/form-data; charset=UTF-8")
+    //@Consumes("multipart/form-data")
     public Response insertObservation(
             @FormDataParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
             @FormDataParam(VgiParams.TIMESTAMP_NAME) String timestampValue,
@@ -435,6 +435,42 @@ public class VgiObservationRest {
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
                 VgiMedia medium = orUtil.processGetVgiMedia(obsId, mediaId, userName);
+                return Response.ok(new ByteArrayInputStream(medium.getObservedMedia()))
+                        .header(HttpHeaders.CONTENT_TYPE, medium.getMediaDatatype())
+                        //.header("Content-Disposition", "attachment; filename="+media.get(0).internalGetTimeReceivedMilis()+".png")
+                        .build();
+            } catch (SQLException e){
+                return Response.serverError().entity(e.getMessage())
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                        .build();
+            }
+        }
+        else{
+            return Response.serverError().entity("VGIObservation ID and VGIMedia ID must be given!")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                    .build();
+        }
+    }
+    
+    /**
+     * Service for getting thumbnail of connected media file
+     * URL: /rest/vgi/observation/{obs_vgi_id}/media/{media_id}?user_name=
+     * @param obs_vgi_id - ID of master VgiObservation object
+     * @param media_id - ID of connected VgiMedia 
+     * @param userName - name of user that owns VgiObservation object
+     * @return VgiMedia object as output stream
+     * @throws SQLException
+     */
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media/{"+VgiParams.MEDIA_ID_NAME+"}/thumbnail")
+    @GET
+    public Response getVgiMediaThumbnail(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @PathParam(VgiParams.MEDIA_ID_NAME) Integer mediaId,
+            @QueryParam(VgiParams.USER_NAME) String userName){
+        if(obsId != null && mediaId != null && userName != null){
+            try{
+                VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
+                VgiMedia medium = orUtil.processGetVgiMediaThumbnail(obsId, mediaId, userName);
                 return Response.ok(new ByteArrayInputStream(medium.getObservedMedia()))
                         .header(HttpHeaders.CONTENT_TYPE, medium.getMediaDatatype())
                         //.header("Content-Disposition", "attachment; filename="+media.get(0).internalGetTimeReceivedMilis()+".png")

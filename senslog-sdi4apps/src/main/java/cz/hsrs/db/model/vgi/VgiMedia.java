@@ -18,15 +18,16 @@ import cz.hsrs.db.vgi.util.VgiParams;
 @XmlRootElement
 public class VgiMedia {
 
-	@XmlElement(name = VgiParams.MEDIA_ID_NAME)
+    @XmlElement(name = VgiParams.MEDIA_ID_NAME)
     private int mediaId;
-	@XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
+    @XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
     private int obsId;
-	@XmlElement(name = "received_time")
+    @XmlElement(name = VgiParams.TIME_RECEIVED_NAME)
     private String timeReceivedString;
     private Date timeReceived;
-    @XmlElement(name = "observed_media")
+    @XmlElement(name = VgiParams.OBSERVED_MEDIA_NAME)
     private byte[] observedMedia;
+    private byte[] thumbnail;
     private String datatype;
     
     /**
@@ -36,6 +37,7 @@ public class VgiMedia {
     }
     
     /**
+     * Constructor for selecting only media file from DB
      * @param mediaId
      * @param obsId
      * @param timeReceivedString
@@ -48,6 +50,51 @@ public class VgiMedia {
         this.obsId = obsId;
         this.timeReceivedString = timeReceivedString;
         this.observedMedia = observedMedia;
+        this.datatype = mediaDatatype;
+        try {
+            this.timeReceived = DateUtil.parseTimestampMicro(timeReceivedString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Constructor for selecting only thumbnail of media file from DB
+     * @param mediaId
+     * @param obsId
+     * @param timeReceivedString
+     * @param mediaDatatype
+     * @param thumbnail
+     */
+    public VgiMedia(int mediaId, int obsId, String timeReceivedString, String mediaDatatype,
+            byte[] thumbnail) {
+        this.mediaId = mediaId;
+        this.obsId = obsId;
+        this.timeReceivedString = timeReceivedString;
+        this.thumbnail = thumbnail;
+        this.datatype = mediaDatatype;
+        try {
+            this.timeReceived = DateUtil.parseTimestampMicro(timeReceivedString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Constructor for complete object selected form DB
+     * @param mediaId
+     * @param obsId
+     * @param timeReceivedString
+     * @param observedMedia
+     * @param mediaDatatype
+     */
+    public VgiMedia(int mediaId, int obsId, String timeReceivedString,
+            byte[] observedMedia, byte[] thumbnail, String mediaDatatype) {
+        this.mediaId = mediaId;
+        this.obsId = obsId;
+        this.timeReceivedString = timeReceivedString;
+        this.observedMedia = observedMedia;
+        this.thumbnail = thumbnail;
         this.datatype = mediaDatatype;
         try {
             this.timeReceived = DateUtil.parseTimestampMicro(timeReceivedString);
@@ -110,6 +157,13 @@ public class VgiMedia {
     public byte[] getObservedMedia() {
         return observedMedia;
     }
+    
+    /**
+     * @return the thumbnail
+     */
+    public byte[] getThumbnail() {
+        return thumbnail;
+    }
 
     /**
      * @return the mediaDatatype
@@ -127,5 +181,4 @@ public class VgiMedia {
                 + ", timeReceivedString=" + timeReceivedString
                 + ", mediaDatatype=" + datatype + "]";
     }
-    
 }

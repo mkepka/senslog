@@ -658,4 +658,30 @@ public class VgiObservationRestUtil {
             throw new SQLException(e.getMessage());
         }
     }
+
+    /**
+     * Method processes select of thumbnail of specified media file
+     * @param obsId - ID of master VgiObservation
+     * @param mediaId - ID of VgiMedia object
+     * @param userName - name of user that owns master VgiObservation
+     * @return VgiMedia object containing only thumbnail of media file as bytea
+     * @throws SQLException
+     */
+	public VgiMedia processGetVgiMediaThumbnail(Integer obsId, Integer mediaId, String userName) throws SQLException {
+        try{
+            // get userId from userName
+            int userId = userUt.getUserId(userName);
+            // check existence of the VgiObservation
+            VgiObservation obs = oUtil.getVgiObservationByObsId(obsId, userId);
+            if(obs != null){
+                VgiMedia medium = mUtil.getVgiMediaThumbnail(obsId, mediaId);
+                return medium;
+            }
+            else{
+                throw new SQLException("VGIObservation with given ID does not exist!");
+            }
+        } catch(NoItemFoundException e){
+            throw new SQLException(e.getMessage());
+        }
+	}
 }
