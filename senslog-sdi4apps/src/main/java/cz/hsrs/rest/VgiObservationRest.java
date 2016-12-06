@@ -58,7 +58,8 @@ public class VgiObservationRest {
      * @param descValue - description of VgiObservation, optional
      * @param attsValue - further attributes in JSON format as String
      * @param datasetIdValue - ID of VgiDataset, mandatory
-     * @param unitIdValue - ID of unit that has produced observation, mandatory
+     * @param unitIdValue - ID of unit that has produced observation, mandatory if uuid is not present
+     * @param uuidValue - ID of device that has producing observation, mandatory if unitId is not present
      * @param lonValue - Longitude of observation, mandatory
      * @param latValue - Latitude of observation, mandatory
      * @param altValue - Altitude of observation, optional
@@ -80,7 +81,8 @@ public class VgiObservationRest {
             @FormDataParam(VgiParams.DESCRIPTION_NAME) String descValue,
             @FormDataParam(VgiParams.ATTRIBUTES_NAME) String attsValue,
             @FormDataParam(VgiParams.DATASET_ID_NAME) Integer datasetIdValue,
-            @FormDataParam(VgiParams.UNIT_ID_NAME) Long unitIdValue,
+            @FormDataParam(VgiParams.UNIT_ID_NAME) String unitIdValue,
+            @FormDataParam(VgiParams.UUID_NAME) String uuidValue,
             @FormDataParam(VgiParams.LON_NAME) String lonValue,
             @FormDataParam(VgiParams.LAT_NAME) String latValue,
             @FormDataParam(VgiParams.ALT_NAME) String altValue,
@@ -106,7 +108,7 @@ public class VgiObservationRest {
                         catValue,
                         descValue,
                         attsValue,
-                        unitIdValue,
+                        unitIdValue, uuidValue,
                         userName,
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,
@@ -122,7 +124,7 @@ public class VgiObservationRest {
                         catValue,
                         descValue,
                         attsValue,
-                        unitIdValue,
+                        unitIdValue, uuidValue,
                         userName,
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,
@@ -147,7 +149,8 @@ public class VgiObservationRest {
      * @param descValue - description of VgiObservation, optional
      * @param attsValue - further attributes in JSON format as String
      * @param datasetIdValue - ID of VgiDataset, mandatory
-     * @param unitIdValue - ID of unit that has produced observation, mandatory
+     * @param unitIdValue - ID of unit that has produced observation, mandatory if uuid is not present
+     * @param uuidValue - ID of device that has producing observation, mandatory if unitId is not present
      * @param lonValue - Longitude of observation, mandatory
      * @param latValue - Latitude of observation, mandatory
      * @param altValue - Altitude of observation, optional
@@ -168,7 +171,8 @@ public class VgiObservationRest {
             @FormDataParam(VgiParams.DESCRIPTION_NAME) String descValue,
             @FormDataParam(VgiParams.ATTRIBUTES_NAME) String attsValue,
             @FormDataParam(VgiParams.DATASET_ID_NAME) Integer datasetIdValue,
-            @FormDataParam(VgiParams.UNIT_ID_NAME) Long unitIdValue,
+            @FormDataParam(VgiParams.UNIT_ID_NAME) String unitIdValue,
+            @FormDataParam(VgiParams.UUID_NAME) String uuidValue,
             @FormDataParam(VgiParams.LON_NAME) String lonValue,
             @FormDataParam(VgiParams.LAT_NAME) String latValue,
             @FormDataParam(VgiParams.ALT_NAME) String altValue,
@@ -193,7 +197,7 @@ public class VgiObservationRest {
                         catValue,
                         descValue,
                         attsValue,
-                        unitIdValue,
+                        unitIdValue, uuidValue,
                         userName,
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,

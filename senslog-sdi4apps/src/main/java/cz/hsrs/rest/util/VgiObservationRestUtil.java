@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.Date;
@@ -63,7 +64,8 @@ public class VgiObservationRestUtil {
      * @param descValue - description of VgiObservation, optional
      * @param attsValue - further attributes in JSON format as String
      * @param datasetIdValue - ID of VgiDataset, mandatory
-     * @param unitId - ID of unit that has produced observation, mandatory
+     * @param unitId - ID of unit that has produced observation, mandatory if uuid is not present
+     * @param uuidValue - ID of device that has produced observation, mandatory if unitId is not present 
      * @param userName - name of user that produced the observation, mandatory
      * @param lonValue - Longitude of observation, mandatory
      * @param latValue - Latitude of observation, mandatory
@@ -75,7 +77,7 @@ public class VgiObservationRestUtil {
      * @throws Exception
      */
     public int processInsertVgiObs(String timestampValue, Integer catValue, String descValue, String attsValue,
-            Long unitId, String userName, Integer datasetId, String lonValue, String latValue, String altValue,
+            String unitIdValue, String uuidValue, String userName, Integer datasetId, String lonValue, String latValue, String altValue,
             String dopValue, InputStream fileInStream, String mediaType) throws Exception{
         int obsId = 0;
         int newGid = 0;
@@ -84,56 +86,65 @@ public class VgiObservationRestUtil {
         int userId = userUt.getUserId(userName);
         
         // check of unitId
-        if(unitId == null){
+        Long unitId = null;
+        if((unitIdValue == null || unitIdValue.isEmpty()) && (uuidValue == null || uuidValue.isEmpty())){
             throw new Exception("ID of device has to be defined!");
         }
+        else if((unitIdValue != null && !unitIdValue.isEmpty()) && (uuidValue == null || uuidValue.isEmpty())){
+            unitId = Long.parseLong(unitIdValue);
+        }
+        else if((unitIdValue == null || unitIdValue.isEmpty()) && (uuidValue != null && !uuidValue.isEmpty())){
+            unitId = new BigInteger(uuidValue, 16).longValue();
+        }
         else{
-            // check mandatory attributes and the geometry
-            if(lonValue != null && 
-                latValue != null &&
-                timestampValue != null &&
-                catValue != null &&
-                datasetId != null){
-                Date posDate = DateUtil.parseTimestamp(timestampValue);
-                newGid = DatabaseFeedOperation.insertPositionByGid(
-                            unitId.longValue(),
-                            Double.valueOf(latValue), 
-                            Double.valueOf(lonValue),
-                            (altValue != null) ? Double.valueOf(altValue) : Double.NaN,
-                            (dopValue != null) ? Double.valueOf(dopValue) : Double.NaN,
-                            posDate, 
-                            Double.NaN, 
-                            "4326");
-                // ins observation
-                if(newGid != 0){
-                    obsId = VgiObservationUtil.insertVgiObs(
-                                newGid, 
-                                DateUtil.formatSecsTZ.format(posDate), 
-                                catValue, 
-                                descValue, 
-                                attsValue, 
-                                unitId, 
-                                userId, 
-                                datasetId);
-                    if(fileInStream != null){
-                        try{
-                            insertMedia(obsId, fileInStream, mediaType);
-                            //insertImage(fileInStream, 0, obsId, mediaType);
-                        } catch(Exception e){
-                            if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
-                                throw new Exception (e.getMessage());
-                            }
+            throw new Exception("Correct ID of device has to be defined!");
+        }
+        // check mandatory attributes and the geometry
+        if(lonValue != null && 
+            latValue != null &&
+            timestampValue != null &&
+            catValue != null &&
+            datasetId != null){
+            
+            Date posDate = DateUtil.parseTimestamp(timestampValue);
+            newGid = DatabaseFeedOperation.insertPositionByGid(
+                        unitId.longValue(),
+                        Double.valueOf(latValue), 
+                        Double.valueOf(lonValue),
+                        (altValue != null && !altValue.isEmpty()) ? Double.valueOf(altValue) : Double.NaN,
+                        (dopValue != null && !dopValue.isEmpty()) ? Double.valueOf(dopValue) : Double.NaN,
+                        posDate, 
+                        Double.NaN, 
+                        "4326");
+            // ins observation
+            if(newGid != 0){
+                obsId = VgiObservationUtil.insertVgiObs(
+                            newGid, 
+                            DateUtil.formatSecsTZ.format(posDate), 
+                            catValue, 
+                            descValue, 
+                            attsValue, 
+                            unitId, 
+                            userId, 
+                            datasetId);
+                if(fileInStream != null){
+                    try{
+                        insertMedia(obsId, fileInStream, mediaType);
+                        //insertImage(fileInStream, 0, obsId, mediaType);
+                    } catch(Exception e){
+                        if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
+                            throw new Exception (e.getMessage());
                         }
                     }
-                    return obsId;
                 }
-                else{
-                    throw new Exception("Mandatory attributes of VGIObservation have to be given!");
-                }
+                return obsId;
             }
             else{
                 throw new Exception("Mandatory attributes of VGIObservation have to be given!");
             }
+        }
+        else{
+            throw new Exception("Mandatory attributes of VGIObservation have to be given!");
         }
     }
     
@@ -145,7 +156,8 @@ public class VgiObservationRestUtil {
      * @param catValue - ID of VgiCategory, mandatory
      * @param descValue - description of VgiObservation, optional
      * @param attsValue - further attributes in JSON format as String
-     * @param unitId - ID of unit that has produced observation, mandatory
+     * @param unitIdValue - ID of unit that has produced observation, mandatory if uuid is not present
+     * @param uuidValue - ID of device that has produced observation, mandatory if unitId is not present 
      * @param userName - name of user that produced the observation, mandatory
      * @param datasetIdValue - ID of VgiDataset, mandatory
      * @param lonValue - Longitude of observation, mandatory
@@ -158,16 +170,26 @@ public class VgiObservationRestUtil {
      * @throws Exception 
      */
     public boolean processUpdateVgiObs(Integer obsId, String timestampValue, Integer catValue, String descValue,
-            String attsValue, Long unitId, String userName, Integer datasetId, String lonValue, String latValue, 
+            String attsValue, String unitIdValue, String uuidValue, String userName, Integer datasetId, String lonValue, String latValue, 
             String altValue, String dopValue, InputStream fileInStream, String mediaType) throws Exception {
         // get userId from userName
         int userId = userUt.getUserId(userName);
         boolean updated = false;
-        // check of unitId
-        if(unitId == null){
+        // check of ID of device
+        Long unitId = null;
+        if((unitIdValue == null || unitIdValue.isEmpty()) && (uuidValue == null || uuidValue.isEmpty())){
             throw new Exception("ID of device has to be defined!");
         }
-        else {
+        else if((unitIdValue != null && !unitIdValue.isEmpty()) && (uuidValue == null || uuidValue.isEmpty())){
+            unitId = Long.parseLong(unitIdValue);
+        }
+        else if((unitIdValue == null || unitIdValue.isEmpty()) && (uuidValue != null && !uuidValue.isEmpty())){
+            unitId = new BigInteger(uuidValue, 16).longValue();
+        }
+        else{
+            throw new Exception("Correct ID of device has to be defined!");
+        }
+        if(unitId != null) {
             // check if there is VgiObservation to update
             VgiObservation oldObs = oUtil.getVgiObservationByObsId(obsId, userId);
             if(oldObs == null){
@@ -182,23 +204,28 @@ public class VgiObservationRestUtil {
                     datasetId != null){
                     
                     Date posDate = DateUtil.parseTimestamp(timestampValue);
-                    UnitPosition pos = unitUt.getPositionByGid(oldObs.getGid());
+                    UnitPosition oldPos = unitUt.getPositionByGid(oldObs.getGid());
                     boolean updatedPos = false;
-                    // same position
-                    if(pos.getX() == Double.parseDouble(lonValue) &&
-                        pos.getY() == Double.parseDouble(latValue) &&
-                        pos.getAlt() == Double.parseDouble(altValue) &&
-                        pos.internalGetTimestamp() == posDate){
+                    
+                    Double newLon = Double.parseDouble(lonValue);
+                    Double newLat = Double.parseDouble(latValue);
+                    Double newAlt = (altValue != null && !altValue.isEmpty()) ? Double.parseDouble(altValue) : Double.NaN;
+                    Double newDop = (dopValue != null && !dopValue.isEmpty()) ? Double.parseDouble(dopValue) : Double.NaN;
+                 // same position
+                    if(oldPos.getX() == newLon &&
+                        oldPos.getY() == newLat &&
+                        oldPos.getAlt() == newAlt &&
+                        oldPos.internalGetTimestamp() == posDate){
                         // not update position
                         updatedPos = true;
                     } else{
-                        UnitPosition newPos = new UnitPosition(pos.getGid(),
-                                pos.getUnit_id(), 
-                                Double.parseDouble(lonValue),
-                                Double.parseDouble(latValue),
-                                Double.parseDouble(altValue),
+                        UnitPosition newPos = new UnitPosition(oldPos.getGid(),
+                                oldPos.getUnit_id(), 
+                                newLon,
+                                newLat,
+                                newAlt,
                                 posDate,
-                                Double.parseDouble(dopValue),
+                                newDop,
                                 Double.NaN,
                                 "4326"); 
                         updatedPos = DatabaseFeedOperation.updatePositionByGid(newPos);
@@ -207,7 +234,7 @@ public class VgiObservationRestUtil {
                     if(updatedPos){
                         updated = VgiObservationUtil.updateVgiObs(
                                 obsId,
-                                pos.getGid(),
+                                oldPos.getGid(),
                                 DateUtil.formatSecsTZ.format(posDate), 
                                 catValue,
                                 descValue,
@@ -367,7 +394,7 @@ public class VgiObservationRestUtil {
                 obsList = oUtil.getVgiObservationsByUserByExtentAsJSON(userId, extent, from, to);
             }
             else if(datasetId == null && categoryId == null && extentArr == null && unitId != null){
-            	obsList = oUtil.getVgiObservationsByUserByUnitAsJSON(userId, unitId, from, to);
+                obsList = oUtil.getVgiObservationsByUserByUnitAsJSON(userId, unitId, from, to);
             }
             else if(datasetId != null && categoryId == null && extentArr != null && unitId == null){
                 Envelope2D extent = new Envelope2D(extentArr);
@@ -472,7 +499,7 @@ public class VgiObservationRestUtil {
             try{
                 byte[] mediaArr = IOUtils.toByteArray(fileInStream);
                 if(mediaArr != null && mediaArr.length != 0 
-                	&& mediaType != null && !mediaType.isEmpty()){
+                    && mediaType != null && !mediaType.isEmpty()){
                     InputStream is = new ByteArrayInputStream(mediaArr);
                     VgiMediaUtil.insertVgiMedia(obsId, is, mediaArr.length, mediaType);
                     return true;

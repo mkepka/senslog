@@ -2,8 +2,10 @@ package cz.hsrs.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
+import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Date;
+import java.util.Arrays;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +22,7 @@ import javax.ws.rs.core.Response;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import cz.hsrs.db.util.DateUtil;
+import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.rest.util.BasicAuth;
 import cz.hsrs.rest.util.RestUtil;
 import cz.hsrs.rest.util.VgiObservationRestUtil;
@@ -46,8 +48,17 @@ public class VgiRest {
     public String testPoi(@QueryParam("test") String testValue, @Context HttpServletRequest request) throws ParseException{
         //RestUtil rUtil = new RestUtil();
         //String result = rUtil.testPoi(testValue);
-        Date result = DateUtil.parseTimestamp(testValue);
-        return result.toString();
+        //Date result = DateUtil.parseTimestamp(testValue);
+    	BigInteger bi = new BigInteger(testValue, 16);
+    	Long biL = bi.longValue();
+    	//Long resDec = Long.decode("0x "+testValue);
+    	Long result = hexToLong(testValue.getBytes());
+    	String original = Long.toHexString(result);
+        return "Original: "+testValue+"\n"
+        		+"Long parse: "+biL.toString()+"\n"
+        		//+"Long decode: "+resDec+"\n"
+    			+"Long: "+result.toString()+"\n"
+        		+"ByteHex: "+original;
     }
     
     @Path("/testciti")
@@ -244,7 +255,7 @@ public class VgiRest {
             @FormDataParam("description") String descValue,
             @FormDataParam("attributes") String attsValue,
             @FormDataParam("dataset") Integer datasetIdValue,
-            @FormDataParam("unitId") Long unitIdValue,
+            @FormDataParam("unitId") String unitIdValue,
             @FormDataParam("lon") String lonValue,
             @FormDataParam("lat") String latValue,
             @FormDataParam("alt") String altValue,
@@ -265,14 +276,14 @@ public class VgiRest {
 
             if(obsId == null){
                 int newObsId = orUtil.processInsertVgiObs(timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
+                        unitIdValue, null, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
                         fileInStream, mediaType);
                 return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
                         .build();
             }
             else{
                 boolean inserted = orUtil.processUpdateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
-                        unitIdValue, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
+                        unitIdValue, null, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
                         fileInStream, mediaType);
                 return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
                         .build();
@@ -303,4 +314,47 @@ public class VgiRest {
                 .build();
     }
     */
+    
+    private long hexToLong(byte[] bytes) {
+		if (bytes.length > 16) {
+			throw new IllegalArgumentException("Byte array too long (max 16 elements)");
+		}
+		long v = 0;
+		for (int i = 0; i < bytes.length; i += 2) {
+			byte b1 = (byte) (bytes[i] & 0xFF);
+			b1 -= 48;
+			if (b1 > 9) b1 -= 39;
+			if (b1 < 0 || b1 > 15) {
+				throw new IllegalArgumentException("Illegal hex value: " + bytes[i]);
+			}
+			b1 <<=4;
+			byte b2 = (byte) (bytes[i + 1] & 0xFF);
+			b2 -= 48;
+			if (b2 > 9) b2 -= 39;
+			if (b2 < 0 || b2 > 15) {
+				throw new IllegalArgumentException("Illegal hex value: " + bytes[i + 1]);
+			}
+			v |= (((b1 & 0xF0) | (b2 & 0x0F))) & 0x00000000000000FFL ;
+			if (i + 2 < bytes.length) v <<= 8;
+		}
+		return v;
+	}
+	private byte[] longToHex(final long l) {
+		long v = l & 0xFFFFFFFFFFFFFFFFL;
+		byte[] result = new byte[16];
+		Arrays.fill(result, 0, result.length, (byte)0);
+		for (int i = 0; i < result.length; i += 2) {
+			byte b = (byte) ((v & 0xFF00000000000000L) >> 56);
+			byte b2 = (byte) (b & 0x0F);
+			byte b1 = (byte) ((b >> 4) & 0x0F);
+			if (b1 > 9) b1 += 39;
+			b1 += 48;
+			if (b2 > 9) b2 += 39;
+			b2 += 48;
+			result[i] = (byte) (b1 & 0xFF);
+			result[i + 1] = (byte) (b2 & 0xFF);
+			v <<= 8;
+		}
+		return result;
+	}
 }

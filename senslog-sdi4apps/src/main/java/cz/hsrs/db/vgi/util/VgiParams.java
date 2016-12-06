@@ -27,7 +27,9 @@ public class VgiParams {
     
     public static final String DESCRIPTION_NAME = "description";
     public static final String ATTRIBUTES_NAME = "attributes";
+    
     public static final String UNIT_ID_NAME = "unit_id";
+    public static final String UUID_NAME = "uuid";
     
     public static final String LAT_NAME = "lat";
     public static final String LON_NAME = "lon";
