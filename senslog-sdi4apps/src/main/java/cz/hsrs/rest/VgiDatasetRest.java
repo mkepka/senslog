@@ -24,6 +24,7 @@ import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import cz.hsrs.db.model.vgi.VgiDataset;
 import cz.hsrs.db.util.DateUtil;
+import cz.hsrs.db.vgi.util.VgiParams;
 import cz.hsrs.rest.util.VgiDatasetRestUtil;
 
 /**
@@ -71,14 +72,16 @@ public class VgiDatasetRest {
     //@Path("/") // not necessary to specify Path
     @POST
     @Consumes(MediaType.APPLICATION_JSON+";charset=utf-8")
-    public Response insertDataset(String payload, @QueryParam("user_name") String userName){
+    public Response insertDataset(
+            String payload, 
+            @QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(payload != null){
                 JSONObject dataset = JSONObject.fromObject(payload);
                 VgiDatasetRestUtil drUtil = new VgiDatasetRestUtil();
                 int datasetId = drUtil.processInsertVgiDataset(dataset, userName);
                 
-                JSONObject resp = new JSONObject().accumulate("dataset_id", datasetId);
+                JSONObject resp = new JSONObject().accumulate(VgiParams.DATASET_ID_NAME, datasetId);
                 return Response.ok(resp)
                         .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                         .build();
@@ -102,9 +105,11 @@ public class VgiDatasetRest {
      * @param datasetId - ID of VGIDataset object
      * @return VgiDataset object as JSON
      */
-    @Path("/{dataset_id}")
+    @Path("/{"+VgiParams.DATASET_ID_NAME+"}")
     @GET
-    public Response getVgiDataset(@PathParam("dataset_id") Integer datasetId, @QueryParam("user_name") String userName){
+    public Response getVgiDataset(
+            @PathParam(VgiParams.DATASET_ID_NAME) Integer datasetId,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(datasetId != null && userName != null){
                 VgiDatasetRestUtil drUtil = new VgiDatasetRestUtil();
@@ -134,7 +139,7 @@ public class VgiDatasetRest {
      */
     //@Path("/") // not necessary to specify Path
     @GET
-    public Response selectVgiDatasets(@QueryParam("user_name") String userName){
+    public Response selectVgiDatasets(@QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(userName != null && !userName.isEmpty()){
                 VgiDatasetRestUtil drUtil = new VgiDatasetRestUtil();
@@ -162,9 +167,11 @@ public class VgiDatasetRest {
      * @param userName - name of user
      * @return HTTP OK if VgiDataset was deleted, HTTP Not Modified if it was not deleted
      */
-    @Path("/{dataset_id}")
+    @Path("/{"+VgiParams.DATASET_ID_NAME+"}")
     @DELETE
-    public Response deleteVgiDataset(@PathParam("dataset_id") Integer datasetId, @QueryParam("user_name") String userName){
+    public Response deleteVgiDataset(
+            @PathParam(VgiParams.DATASET_ID_NAME) Integer datasetId, 
+            @QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(datasetId != null && userName != null){
                 VgiDatasetRestUtil drUtil = new VgiDatasetRestUtil();

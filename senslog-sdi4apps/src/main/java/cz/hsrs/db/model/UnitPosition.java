@@ -306,17 +306,17 @@ public class UnitPosition implements DBObject {
         StringBuffer queryBuff= new StringBuffer();
         if(SQLExecutor.isAltitudeEnabled()){
             queryBuff.append("INSERT INTO "+SCHEMA_NAME+".units_positions(altitude, the_geom, unit_id, time_stamp, gid, speed, dop) VALUES (");
-            queryBuff.append(this.alt+", ");
+            queryBuff.append(Double.isNaN(this.alt) ? "NULL, " : String.valueOf(this.alt)+", ");
         }
         else{
             queryBuff.append("INSERT INTO "+SCHEMA_NAME+".units_positions(the_geom, unit_id, time_stamp, gid, speed, dop) VALUES (");
         }
         queryBuff.append("st_geomfromtext('"+ this.geom + "', "+(this.srid.isEmpty() ? "4326" : this.srid)+"), ");
         queryBuff.append(this.unit_id + ", ");
-        queryBuff.append("timestamp with time zone '" + DateUtil.formatSecsTZ.format(timeStamp) + "', ");
+        queryBuff.append("timestamp with time zone '" + DateUtil.formatSecsTZ.format(this.timeStamp) + "', ");
         queryBuff.append(this.gid + ", ");
-        queryBuff.append(Double.isNaN(this.speed) ? "NULL, " : String.valueOf(speed)+", ");
-        queryBuff.append(Double.isNaN(dop) ? "NULL" : String.valueOf(dop));
+        queryBuff.append(Double.isNaN(this.speed) ? "NULL, " : String.valueOf(this.speed)+", ");
+        queryBuff.append(Double.isNaN(this.dop) ? "NULL" : String.valueOf(this.dop));
         queryBuff.append(");");
         
         String ins = queryBuff.toString();

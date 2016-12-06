@@ -231,8 +231,8 @@ public class VgiObservationUtil {
         try{
             String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
                     + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
-            		+ " WHERE ov.gid = up.gid"
-            		+ " AND ov.user_id = "+userId+"";
+                    + " WHERE ov.gid = up.gid"
+                    + " AND ov.user_id = "+userId+"";
             if(fromTime == null && toTime == null){
                 query = query
                         + ";";
@@ -549,8 +549,8 @@ public class VgiObservationUtil {
      * @return List of VgiObservations in GeoJSON format
      * @throws SQLException 
      */
-	public List<JSONObject> getVgiObservationsByUserByUnitAsJSON(int userId, long unitId, String fromTime, String toTime) throws SQLException {
-		try{
+    public List<JSONObject> getVgiObservationsByUserByUnitAsJSON(int userId, long unitId, String fromTime, String toTime) throws SQLException {
+        try{
             String query = VgiObservation.SELECT_ATTRIBUTES_GEOJSON
                     + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
                     + " WHERE ov.gid = up.gid"
@@ -576,7 +576,7 @@ public class VgiObservationUtil {
         } catch(SQLException e){
             throw new SQLException(e.getMessage());
         }
-	}
+    }
     
     /**
      * Method selects List of VgiObservation objects by given filter parameters 
@@ -835,17 +835,17 @@ public class VgiObservationUtil {
             feature.put("geometry", res.getString("st_asgeojson"));
             // properties
             JSONObject properties = new JSONObject();
-            properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
-            properties.put("category_id", res.getInt("category_id"));
-            properties.put("dataset_id", res.getInt("dataset_id"));
-            properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
-            properties.put("media_count", res.getInt("media_count"));
-            properties.put("obs_vgi_id", res.getInt("obs_vgi_id"));
-            properties.put("time_stamp", res.getString("time_stamp"));
-            properties.put("unit_id", res.getLong("unit_id"));
-            properties.put("time_received", res.getString("time_received"));
-            properties.put("altitude", res.getDouble("altitude"));
-            properties.put("dop", res.getDouble("dop"));
+            properties.put(VgiParams.ATTRIBUTES_NAME, res.getString("attributes") == null ? "" : res.getString("attributes"));
+            properties.put(VgiParams.CATEGORY_ID_NAME, res.getInt("category_id"));
+            properties.put(VgiParams.DATASET_ID_NAME, res.getInt("dataset_id"));
+            properties.put(VgiParams.DESCRIPTION_NAME, res.getString("description") == null ? "" : res.getString("description"));
+            properties.put(VgiParams.MEDIA_COUNT_NAME, res.getInt("media_count"));
+            properties.put(VgiParams.OBS_VGI_ID_NAME, res.getInt("obs_vgi_id"));
+            properties.put(VgiParams.TIMESTAMP_NAME, res.getString("time_stamp"));
+            properties.put(VgiParams.UNIT_ID_NAME, res.getLong("unit_id"));
+            properties.put(VgiParams.TIME_RECEIVED_NAME, res.getString("time_received"));
+            properties.put(VgiParams.ALT_NAME, res.getDouble("altitude"));
+            properties.put(VgiParams.DOP_NAME, res.getDouble("dop"));
             feature.put("properties", properties);
             return feature;
         }
@@ -870,17 +870,17 @@ public class VgiObservationUtil {
             feature.put("geometry", res.getString("st_asgeojson"));
             // properties
             JSONObject properties = new JSONObject();
-            properties.put("attributes", res.getString("attributes") == null ? "" : res.getString("attributes"));
-            properties.put("category_id", res.getInt("category_id"));
-            properties.put("dataset_id", res.getInt("dataset_id"));
-            properties.put("description", res.getString("description") == null ? "" : res.getString("description"));
-            properties.put("media_count", res.getInt("media_count"));
-            properties.put("obsID", res.getInt("obs_vgi_id"));
-            properties.put("time_stamp", res.getString("time_stamp"));
-            properties.put("unit_id", res.getLong("unit_id"));
-            properties.put("time_received", res.getString("time_received"));
-            properties.put("altitude", res.getDouble("altitude"));
-            properties.put("dop", res.getDouble("dop"));
+            properties.put(VgiParams.ATTRIBUTES_NAME, res.getString("attributes") == null ? "" : res.getString("attributes"));
+            properties.put(VgiParams.CATEGORY_ID_NAME, res.getInt("category_id"));
+            properties.put(VgiParams.DATASET_ID_NAME, res.getInt("dataset_id"));
+            properties.put(VgiParams.DESCRIPTION_NAME, res.getString("description") == null ? "" : res.getString("description"));
+            properties.put(VgiParams.MEDIA_COUNT_NAME, res.getInt("media_count"));
+            properties.put(VgiParams.OBS_VGI_ID_NAME, res.getInt("obs_vgi_id"));
+            properties.put(VgiParams.TIMESTAMP_NAME, res.getString("time_stamp"));
+            properties.put(VgiParams.UNIT_ID_NAME, res.getLong("unit_id"));
+            properties.put(VgiParams.TIME_RECEIVED_NAME, res.getString("time_received"));
+            properties.put(VgiParams.ALT_NAME, res.getDouble("altitude"));
+            properties.put(VgiParams.DOP_NAME, res.getDouble("dop"));
             feature.put("properties", properties);
             
             vgiObsList.add(feature);

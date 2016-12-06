@@ -471,7 +471,8 @@ public class VgiObservationRestUtil {
         if(fileInStream != null){
             try{
                 byte[] mediaArr = IOUtils.toByteArray(fileInStream);
-                if(mediaArr != null){
+                if(mediaArr != null && mediaArr.length != 0 
+                	&& mediaType != null && !mediaType.isEmpty()){
                     InputStream is = new ByteArrayInputStream(mediaArr);
                     VgiMediaUtil.insertVgiMedia(obsId, is, mediaArr.length, mediaType);
                     return true;

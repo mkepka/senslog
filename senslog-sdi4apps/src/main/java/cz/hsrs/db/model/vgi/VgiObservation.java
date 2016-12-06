@@ -6,6 +6,8 @@ package cz.hsrs.db.model.vgi;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import cz.hsrs.db.vgi.util.VgiParams;
+
 /**
  * @author mkepka
  *
@@ -13,22 +15,22 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public class VgiObservation {
 
-	@XmlElement(name = "obsID")
+	@XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
     private int obsVgiId;
     private Integer gid;
     private Double x;
     private Double y;
     private Double altitude;
     private Double dop;
-    @XmlElement(name = "time_stamp")
+    @XmlElement(name = VgiParams.TIMESTAMP_NAME)
     private String timeString;
-    @XmlElement(name = "category_id")
+    @XmlElement(name = VgiParams.CATEGORY_ID_NAME)
     private int categoryId;
     private String description;
     private String attributes;
-    @XmlElement(name = "dataset_id")
+    @XmlElement(name = VgiParams.DATASET_ID_NAME)
     private int datasetId;
-    @XmlElement(name = "unit_id")
+    @XmlElement(name = VgiParams.UNIT_ID_NAME)
     private long unitId;
     @XmlElement(name = "user_id")
     private int userId;
@@ -269,12 +271,12 @@ public class VgiObservation {
      */
     @Override
     public String toString() {
-        return "VgiObservation [obsVgiId=" + obsVgiId + ", gid=" + gid
-                + ", timeString=" + timeString + ", categoryId=" + categoryId
+        return "VgiObservation [obs_vgi_id=" + obsVgiId + ", gid=" + gid
+                + ", time_string=" + timeString + ", category_id=" + categoryId
                 + ", description=" + description + ", attributes=" + attributes
-                + ", datasetId=" + datasetId + ", unitId=" + unitId
-                + ", userId=" + userId + ", timeReceived=" + timeReceived
-                + ", mediaCount=" + mediaCount + ", x="+x+", y="+y
+                + ", dataset_id=" + datasetId + ", unit_id=" + unitId
+                + ", user_id=" + userId + ", time_received=" + timeReceived
+                + ", media_count=" + mediaCount + ", x="+x+", y="+y
                 + ", altitude="+altitude+", dop="+dop+"]";
     }
 }

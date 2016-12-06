@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import cz.hsrs.db.model.vgi.VgiCategory;
+import cz.hsrs.db.vgi.util.VgiParams;
 import cz.hsrs.rest.util.VgiCategoryRestUtil;
 
 /**
@@ -40,9 +41,11 @@ public class VgiCategoryRest {
      * @param userName - name of user
      * @return
      */
-    @Path("/{category_id}")
+    @Path("/{"+VgiParams.CATEGORY_ID_NAME+"}")
     @GET
-    public Response getVgiCategory(@PathParam("category_id") Integer categoryId, @QueryParam("user_name") String userName){
+    public Response getVgiCategory(
+    		@PathParam(VgiParams.CATEGORY_ID_NAME) Integer categoryId,
+    		@QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(categoryId != null && userName != null){
                 VgiCategoryRestUtil crUtil = new VgiCategoryRestUtil();
@@ -71,9 +74,11 @@ public class VgiCategoryRest {
      * @param userName - name of user
      * @return List of VGICategory objects that are descendants of given parent VGICategory
      */
-    @Path("/{category_id}/descendants")
+    @Path("/{"+VgiParams.CATEGORY_ID_NAME+"}/descendants")
     @GET
-    public Response getVgiCategoryDescendants(@PathParam("category_id") Integer categoryId, @QueryParam("user_name") String userName){
+    public Response getVgiCategoryDescendants(
+    		@PathParam(VgiParams.CATEGORY_ID_NAME) Integer categoryId,
+    		@QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(categoryId != null && userName != null){
                 VgiCategoryRestUtil crUtil = new VgiCategoryRestUtil();
@@ -103,7 +108,7 @@ public class VgiCategoryRest {
      */
     //@Path("/") // not necessary to specify Path
     @GET
-    public Response selectCategories(@QueryParam("user_name") String userName){
+    public Response selectCategories(@QueryParam(VgiParams.USER_NAME) String userName){
         try{
             if(userName != null){
                 VgiCategoryRestUtil crUtil = new VgiCategoryRestUtil();

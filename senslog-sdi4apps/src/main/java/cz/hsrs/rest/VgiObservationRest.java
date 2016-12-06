@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -16,6 +17,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -29,6 +31,7 @@ import com.sun.jersey.multipart.FormDataParam;
 import cz.hsrs.db.model.NoItemFoundException;
 import cz.hsrs.db.model.vgi.VgiMedia;
 import cz.hsrs.db.model.vgi.VgiObservation;
+import cz.hsrs.db.vgi.util.VgiParams;
 import cz.hsrs.rest.util.VgiObservationRestUtil;
 
 /**
@@ -48,7 +51,7 @@ public class VgiObservationRest {
     
     /**
      * Service for inserting or updating VgiObservation 
-     * URL: /rest/vgi/observation/insert?user_name=
+     * URL: /rest/vgi/observation?user_name=
      * @param obsId - ID of VGIObservation, when specified UPDATE is provided
      * @param timestampValue - time stamp when observation was obtained, mandatory
      * @param catValue - ID of VgiCategory, mandatory
@@ -68,23 +71,25 @@ public class VgiObservationRest {
      */
     //@Path("/") // not necessary to specify Path
     @POST
-    @Consumes("multipart/form-data; charset=UTF-8")
+    //@Consumes("multipart/form-data; charset=UTF-8")
+    @Consumes("multipart/form-data")
     public Response insertObservation(
-            @FormDataParam("obs_vgi_id") Integer obsId,
-            @FormDataParam("timestamp") String timestampValue,
-            @FormDataParam("category") Integer catValue,
-            @FormDataParam("description") String descValue,
-            @FormDataParam("attributes") String attsValue,
-            @FormDataParam("dataset") Integer datasetIdValue,
-            @FormDataParam("unitId") Long unitIdValue,
-            @FormDataParam("lon") String lonValue,
-            @FormDataParam("lat") String latValue,
-            @FormDataParam("alt") String altValue,
-            @FormDataParam("dop") String dopValue,
-            @FormDataParam("media") InputStream fileInStream,
-            @FormDataParam("media") FormDataContentDisposition fileDetail,
-            @FormDataParam("media_type") String mediaType,
-            @QueryParam("user_name") String userName
+            @FormDataParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @FormDataParam(VgiParams.TIMESTAMP_NAME) String timestampValue,
+            @FormDataParam(VgiParams.CATEGORY_ID_NAME) Integer catValue,
+            @FormDataParam(VgiParams.DESCRIPTION_NAME) String descValue,
+            @FormDataParam(VgiParams.ATTRIBUTES_NAME) String attsValue,
+            @FormDataParam(VgiParams.DATASET_ID_NAME) Integer datasetIdValue,
+            @FormDataParam(VgiParams.UNIT_ID_NAME) Long unitIdValue,
+            @FormDataParam(VgiParams.LON_NAME) String lonValue,
+            @FormDataParam(VgiParams.LAT_NAME) String latValue,
+            @FormDataParam(VgiParams.ALT_NAME) String altValue,
+            @FormDataParam(VgiParams.DOP_NAME) String dopValue,
+            @FormDataParam(VgiParams.MEDIA_NAME) InputStream fileInStream,
+            @FormDataParam(VgiParams.MEDIA_NAME) FormDataContentDisposition fileDetail,
+            @FormDataParam(VgiParams.MEDIA_TYPE_NAME) String mediaType,
+            @QueryParam(VgiParams.USER_NAME) String userName,
+            @Context HttpServletRequest request
             ){
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         try {
@@ -153,25 +158,25 @@ public class VgiObservationRest {
      * @param userName - name of user that produced the observation, mandatory
      * @return true if VgiObservation was updated, false if not 
      */
-    @Path("/{obs_vgi_id}")
+    @Path("/{"+VgiParams.OBS_VGI_ID_NAME+"}")
     @PUT
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response updateObservation(
-            @PathParam("obs_vgi_id") Integer obsId,
-            @FormDataParam("timestamp") String timestampValue,
-            @FormDataParam("category") Integer catValue,
-            @FormDataParam("description") String descValue,
-            @FormDataParam("attributes") String attsValue,
-            @FormDataParam("dataset") Integer datasetIdValue,
-            @FormDataParam("unitId") Long unitIdValue,
-            @FormDataParam("lon") String lonValue,
-            @FormDataParam("lat") String latValue,
-            @FormDataParam("alt") String altValue,
-            @FormDataParam("dop") String dopValue,
-            @FormDataParam("media") InputStream fileInStream,
-            @FormDataParam("media") FormDataContentDisposition fileDetail,
-            @FormDataParam("media_type") String mediaType,
-            @QueryParam("user_name") String userName
+            @FormDataParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @FormDataParam(VgiParams.TIMESTAMP_NAME) String timestampValue,
+            @FormDataParam(VgiParams.CATEGORY_ID_NAME) Integer catValue,
+            @FormDataParam(VgiParams.DESCRIPTION_NAME) String descValue,
+            @FormDataParam(VgiParams.ATTRIBUTES_NAME) String attsValue,
+            @FormDataParam(VgiParams.DATASET_ID_NAME) Integer datasetIdValue,
+            @FormDataParam(VgiParams.UNIT_ID_NAME) Long unitIdValue,
+            @FormDataParam(VgiParams.LON_NAME) String lonValue,
+            @FormDataParam(VgiParams.LAT_NAME) String latValue,
+            @FormDataParam(VgiParams.ALT_NAME) String altValue,
+            @FormDataParam(VgiParams.DOP_NAME) String dopValue,
+            @FormDataParam(VgiParams.MEDIA_NAME) InputStream fileInStream,
+            @FormDataParam(VgiParams.MEDIA_NAME) FormDataContentDisposition fileDetail,
+            @FormDataParam(VgiParams.MEDIA_TYPE_NAME) String mediaType,
+            @QueryParam(VgiParams.USER_NAME) String userName
             ){
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         try {
@@ -216,13 +221,16 @@ public class VgiObservationRest {
      * @param user_name - name of user
      * @return VgiObservation object as JSON
      */
-    @Path("/{obs_vgi_id}")
+    @Path("/{"+VgiParams.OBS_VGI_ID_NAME+"}")
     @GET
-    public Response getVgiObservation(@PathParam("obs_vgi_id") Integer obsId, @QueryParam("user_name") String username, @QueryParam("format") String format) {
+    public Response getVgiObservation(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId, 
+            @QueryParam(VgiParams.USER_NAME) String username, 
+            @QueryParam(VgiParams.FORMAT_NAME) String format) {
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         if(obsId != null && username != null){
             try{
-                if(format != null && format.equalsIgnoreCase("geojson")){
+                if(format != null && format.equalsIgnoreCase(VgiParams.FORMAT_GEOJSON_NAME)){
                     JSONObject feature = orUtil.processGetVgiObservationAsJson(obsId, username);
                     return Response.ok(feature)
                             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON+";charset=utf-8")
@@ -265,19 +273,19 @@ public class VgiObservationRest {
     //@Path("/") // not necessary to specify Path
     @GET
     public Response selectVgiObservations(
-            @QueryParam("user_name") String userName,
-            @QueryParam("format") String format,
-            @QueryParam("dataset_id") Integer datasetId,
-            @QueryParam("category_id") Integer categoryId,
-            @QueryParam("fromTime") String fromTime,
-            @QueryParam("toTime") String toTime,
-            @QueryParam("extent") String extent,
-            @QueryParam("unit_id") Long unitId){
+            @QueryParam(VgiParams.USER_NAME) String userName,
+            @QueryParam(VgiParams.FORMAT_NAME) String format,
+            @QueryParam(VgiParams.DATASET_ID_NAME) Integer datasetId,
+            @QueryParam(VgiParams.CATEGORY_ID_NAME) Integer categoryId,
+            @QueryParam(VgiParams.FROM_TIME_NAME) String fromTime,
+            @QueryParam(VgiParams.TO_TIME_NAME) String toTime,
+            @QueryParam(VgiParams.EXTENT_NAME) String extent,
+            @QueryParam(VgiParams.UNIT_ID_NAME) Long unitId){
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         try{
             if(userName != null){
                 // response in GeoJSON
-                if(format != null && format.equalsIgnoreCase("geojson")){
+                if(format != null && format.equalsIgnoreCase(VgiParams.FORMAT_GEOJSON_NAME)){
                     JSONObject featureColl = orUtil.processGetVgiObservationsByUserAsJson(userName, fromTime, toTime, datasetId, categoryId, extent, unitId);
                     return Response.ok(featureColl, MediaType.APPLICATION_JSON+";charset=utf-8")
                             .build();
@@ -310,9 +318,11 @@ public class VgiObservationRest {
      * @param userName - name of user which owns VGIObservation object
      * @return HTTP OK response
      */
-    @Path("/{obs_vgi_id}")
+    @Path("/{"+VgiParams.OBS_VGI_ID_NAME+"}")
     @DELETE
-    public Response deleteVgiObservation(@PathParam("obs_vgi_id") Integer obsId, @QueryParam("user_name") String userName){
+    public Response deleteVgiObservation(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
         if(obsId != null && userName != null){
             try{
@@ -348,15 +358,15 @@ public class VgiObservationRest {
      * @param userName - name of user that owns VgiObservation
      * @return true if media file was inserted
      */
-    @Path("{obs_vgi_id}/media")
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media")
     @POST
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response insertVgiMedia(
-            @PathParam("obs_vgi_id") Integer obsId,
-            @FormDataParam("media_type") String mediaType,
-            @FormDataParam("media") InputStream fileInStream, 
-            @FormDataParam("media") FormDataContentDisposition fileDetail,
-            @QueryParam("user_name") String userName){
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @FormDataParam(VgiParams.MEDIA_TYPE_NAME) String mediaType,
+            @FormDataParam(VgiParams.MEDIA_NAME) InputStream fileInStream, 
+            @FormDataParam(VgiParams.MEDIA_NAME) FormDataContentDisposition fileDetail,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         if(obsId != null && userName != null && fileInStream != null){
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
@@ -383,9 +393,11 @@ public class VgiObservationRest {
      * @return List of description of all connected VgiMedia objects
      * @throws SQLException
      */
-    @Path("{obs_vgi_id}/media")
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media")
     @GET
-    public Response listVgiMedia(@PathParam("obs_vgi_id") Integer obsId, @QueryParam("user_name") String userName) throws SQLException{
+    public Response listVgiMedia(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @QueryParam(VgiParams.USER_NAME) String userName) throws SQLException{
         if(obsId != null && userName != null){
             VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
             List<VgiMedia> media = orUtil.processListVgiMedia(obsId, userName);
@@ -409,9 +421,12 @@ public class VgiObservationRest {
      * @return VgiMedia object as output stream
      * @throws SQLException
      */
-    @Path("{obs_vgi_id}/media/{media_id}")
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media/{"+VgiParams.MEDIA_ID_NAME+"}")
     @GET
-    public Response getVgiMedia(@PathParam("obs_vgi_id") Integer obsId, @PathParam("media_id") Integer mediaId, @QueryParam("user_name") String userName){
+    public Response getVgiMedia(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @PathParam(VgiParams.MEDIA_ID_NAME) Integer mediaId,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         if(obsId != null && mediaId != null && userName != null){
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
@@ -442,16 +457,16 @@ public class VgiObservationRest {
      * @return VgiMedia object as output stream
      * @throws SQLException
      */
-    @Path("{obs_vgi_id}/media/{media_id}")
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media/{"+VgiParams.MEDIA_ID_NAME+"}")
     @PUT
     @Consumes("multipart/form-data; charset=UTF-8")
     public Response updateVgiMedia(
-            @PathParam("obs_vgi_id") Integer obsId,
-            @PathParam("media_id") Integer mediaId,
-            @FormDataParam("media_type") String mediaType,
-            @FormDataParam("media") InputStream fileInStream, 
-            @FormDataParam("media") FormDataContentDisposition fileDetail,
-            @QueryParam("user_name") String userName){
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @PathParam(VgiParams.MEDIA_ID_NAME) Integer mediaId,
+            @FormDataParam(VgiParams.MEDIA_TYPE_NAME) String mediaType,
+            @FormDataParam(VgiParams.MEDIA_NAME) InputStream fileInStream, 
+            @FormDataParam(VgiParams.MEDIA_NAME) FormDataContentDisposition fileDetail,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         if(obsId != null && mediaId != null && userName != null && fileInStream != null){
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
@@ -479,9 +494,12 @@ public class VgiObservationRest {
      * @return VgiMedia object as output stream
      * @throws SQLException
      */
-    @Path("{obs_vgi_id}/media/{media_id}")
+    @Path("{"+VgiParams.OBS_VGI_ID_NAME+"}/media/{"+VgiParams.MEDIA_ID_NAME+"}")
     @DELETE
-    public Response deleteVgiMedia(@PathParam("obs_vgi_id") Integer obsId, @PathParam("media_id") Integer mediaId, @QueryParam("user_name") String userName){
+    public Response deleteVgiMedia(
+            @PathParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
+            @PathParam(VgiParams.MEDIA_ID_NAME) Integer mediaId,
+            @QueryParam(VgiParams.USER_NAME) String userName){
         if(obsId != null && mediaId != null && userName != null){
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();

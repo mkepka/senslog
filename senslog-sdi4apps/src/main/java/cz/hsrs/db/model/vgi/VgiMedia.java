@@ -7,13 +7,20 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import cz.hsrs.db.util.DateUtil;
+import cz.hsrs.db.vgi.util.VgiParams;
 
+/**
+ * Class represents VgiMedia object
+ * containing connected media file to the VgiObservation
+ * @author mkepka
+ *
+ */
 @XmlRootElement
 public class VgiMedia {
 
-	@XmlElement(name = "medID")
+	@XmlElement(name = VgiParams.MEDIA_ID_NAME)
     private int mediaId;
-	@XmlElement(name = "obsID")
+	@XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
     private int obsId;
 	@XmlElement(name = "received_time")
     private String timeReceivedString;

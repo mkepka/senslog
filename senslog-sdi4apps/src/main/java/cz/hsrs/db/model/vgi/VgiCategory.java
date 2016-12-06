@@ -6,19 +6,23 @@ package cz.hsrs.db.model.vgi;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import cz.hsrs.db.vgi.util.VgiParams;
+
 /**
+ * Class represents VgiCategory object
+ * creates characterization and hierarchy of VgiObservation
  * @author mkepka
  *
  */
 @XmlRootElement
 public class VgiCategory {
 
-	@XmlElement(name = "categoryID")
+    @XmlElement(name = VgiParams.CATEGORY_ID_NAME)
     private int categoryId;
-    @XmlElement(name = "category_name")
+    @XmlElement(name = VgiParams.CATEGORY_NAME_NAME)
     private String categoryName;
     private String description;
-    @XmlElement(name = "parentID")
+    @XmlElement(name = "parent_id")
     private Integer parentId; // top-level categories has NULL
     private Integer level;
     private Integer lft;
@@ -117,8 +121,8 @@ public class VgiCategory {
      */
     @Override
     public String toString() {
-        return "CategoryVgi [categoryId=" + categoryId + ", categoryName="
-                + categoryName + ", description=" + description + ", parentId="
+        return "CategoryVgi [category_id=" + categoryId + ", category_name="
+                + categoryName + ", description=" + description + ", parent_id="
                 + parentId + ", level=" + level + ", lft=" + lft + ", rgt="
                 + rgt + "]";
     }

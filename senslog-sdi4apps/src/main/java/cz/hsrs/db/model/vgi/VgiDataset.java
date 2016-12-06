@@ -6,20 +6,27 @@ package cz.hsrs.db.model.vgi;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import cz.hsrs.db.pool.SQLExecutor;
+import cz.hsrs.db.vgi.util.VgiParams;
 
 /**
+ * Class represents VgiDataset object
+ * representing group of VgiObservations 
  * @author mkepka
  *
  */
 @XmlRootElement
 public class VgiDataset {
 
+    @XmlElement (name = VgiParams.DATASET_ID_NAME)
     private int datasetId;
+    @XmlElement (name = VgiParams.DATASET_NAME_NAME)
     private String datasetName;
     private String description;
+    @XmlElement (name = VgiParams.USER_ID_NAME)
     private int userId;
     
     /**
@@ -96,7 +103,7 @@ public class VgiDataset {
      */
     @Override
     public String toString() {
-        return "VgiDataset [datasetId=" + datasetId + ", datasetName="
+        return "VgiDataset [dataset_id=" + datasetId + ", dataset_name="
                 + datasetName + ", description=" + description + ", user_id="
                 + userId + "]";
     }
