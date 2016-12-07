@@ -46,6 +46,8 @@ public class VgiObservationRestUtil {
     private VgiObservationUtil oUtil;
     private VgiMediaUtil mUtil;
     
+    private static final int THUMBNAIL_RATIO = 8;
+    
     /**
      * Constructor instances related Utility classes
      */
@@ -129,8 +131,12 @@ public class VgiObservationRestUtil {
                             datasetId);
                 if(fileInStream != null){
                     try{
-                        insertMedia(obsId, fileInStream, mediaType);
-                        //insertImage(fileInStream, 0, obsId, mediaType);
+                        if(mediaType.startsWith("image/")){
+                            insertImage(fileInStream, obsId, mediaType);
+                        }
+                        else{
+                            insertMedia(obsId, fileInStream, mediaType);
+                        }
                     } catch(Exception e){
                         if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
                             throw new Exception (e.getMessage());
@@ -244,7 +250,12 @@ public class VgiObservationRestUtil {
                                 datasetId);
                         if(fileInStream != null){
                             try{
-                                insertImage(fileInStream, 0, obsId, mediaType);
+                                if(mediaType.startsWith("image/")){
+                                    insertImage(fileInStream, obsId, mediaType);
+                                }
+                                else{
+                                    insertMedia(obsId, fileInStream, mediaType);
+                                }
                             } catch(Exception e){
                                 if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
                                     throw new Exception (e.getMessage());
@@ -445,31 +456,40 @@ public class VgiObservationRestUtil {
     /**
      * Method inserts new VgiMedia to DB
      * @param fileInStream
-     * @param rotationAng
      * @param obsId - ID of associated VgiObservation object
      * @param mediaType - Data type of media
      * @return
      * @throws Exception
      */
-    public boolean insertImage(InputStream fileInStream, int rotationAng, int obsId, String mediaType) throws Exception{
+    public boolean insertImage(InputStream fileInStream, int obsId, String mediaType) throws Exception{
         if(fileInStream != null){
             try{
                 BufferedImage photo = ImageIO.read(fileInStream);
-                if(photo != null){
-                    // rotate if necessary
-                    BufferedImage rotatedImage;
-                    if(rotationAng != 0){
-                        rotatedImage = VgiUtil.rotate(photo, rotationAng);
-                    }
-                    else{
-                        rotatedImage = photo;
-                    }
+                if(photo != null && mediaType != null && !mediaType.isEmpty()){
+                    // parse media type
+                    String[] parsedMediaType = mediaType.split("/");
+                    //String typeMediaType = parsedMediaType[0];
+                    String formatMediaType = parsedMediaType[1];
+                    
+                    // create thumbnail of picture
+                    int tW = photo.getWidth()/THUMBNAIL_RATIO;
+                    int tH = photo.getHeight()/THUMBNAIL_RATIO;
+                    BufferedImage thumb = VgiUtil.rescale(photo, tW, tH);
+                    
                     //write picture to database
-                    ByteArrayOutputStream baosRot = new ByteArrayOutputStream();
-                    ImageIO.write(rotatedImage, "png", baosRot);
-                    byte[] rotArr = baosRot.toByteArray();
-                    InputStream isRot = new ByteArrayInputStream(rotArr);
-                    VgiMediaUtil.insertVgiMedia(obsId, isRot, rotArr.length, mediaType);
+                    ByteArrayOutputStream baosImg = new ByteArrayOutputStream();
+                    ImageIO.write(photo, formatMediaType, baosImg);
+                    byte[] imgArr = baosImg.toByteArray();
+                    InputStream isImg = new ByteArrayInputStream(imgArr);
+                    int medId = VgiMediaUtil.insertVgiMedia(obsId, isImg, imgArr.length, mediaType);
+                    
+                    // write thumbnail to DB
+                    ByteArrayOutputStream baosThumb = new ByteArrayOutputStream();
+                    ImageIO.write(thumb, formatMediaType, baosThumb);
+                    byte[] thumbArr = baosThumb.toByteArray();
+                    InputStream isThumb = new ByteArrayInputStream(thumbArr);
+                    VgiMediaUtil.insertVgiMediaThumbnail(medId, isThumb, thumbArr.length);
+                    
                     return true;
                 }
                 else{
@@ -498,8 +518,7 @@ public class VgiObservationRestUtil {
         if(fileInStream != null){
             try{
                 byte[] mediaArr = IOUtils.toByteArray(fileInStream);
-                if(mediaArr != null && mediaArr.length != 0 
-                    && mediaType != null && !mediaType.isEmpty()){
+                if(mediaArr != null && mediaArr.length != 0 && mediaType != null && !mediaType.isEmpty()){
                     InputStream is = new ByteArrayInputStream(mediaArr);
                     VgiMediaUtil.insertVgiMedia(obsId, is, mediaArr.length, mediaType);
                     return true;
@@ -577,7 +596,13 @@ public class VgiObservationRestUtil {
             // check existence of master VgiObservation
             VgiObservation obs = oUtil.getVgiObservationByObsId(obsId, userId);
             if(obs != null && file != null){
-                boolean inserted = insertImage(file, 0, obsId, mediaType);
+                boolean inserted = false;
+                if(mediaType.startsWith("image/")){
+                    inserted = insertImage(file, obsId, mediaType);
+                }
+                else{
+                    inserted = insertMedia(obsId, file, mediaType);
+                }
                 return inserted;
             }
             else{
@@ -667,7 +692,7 @@ public class VgiObservationRestUtil {
      * @return VgiMedia object containing only thumbnail of media file as bytea
      * @throws SQLException
      */
-	public VgiMedia processGetVgiMediaThumbnail(Integer obsId, Integer mediaId, String userName) throws SQLException {
+    public VgiMedia processGetVgiMediaThumbnail(Integer obsId, Integer mediaId, String userName) throws SQLException {
         try{
             // get userId from userName
             int userId = userUt.getUserId(userName);
@@ -683,5 +708,5 @@ public class VgiObservationRestUtil {
         } catch(NoItemFoundException e){
             throw new SQLException(e.getMessage());
         }
-	}
+    }
 }

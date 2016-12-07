@@ -98,9 +98,9 @@ public class VgiObservationRest {
             if(userName == null){
                 userName = "tester";
             }
-            if(mediaType == null){
+            /*if(mediaType == null){
                 mediaType = "image/png";
-            }
+            }*/
             if(obsId == null){
                 // process INSERT
                 int newObsId = orUtil.processInsertVgiObs(
@@ -471,7 +471,7 @@ public class VgiObservationRest {
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
                 VgiMedia medium = orUtil.processGetVgiMediaThumbnail(obsId, mediaId, userName);
-                return Response.ok(new ByteArrayInputStream(medium.getObservedMedia()))
+                return Response.ok(new ByteArrayInputStream(medium.getThumbnail()))
                         .header(HttpHeaders.CONTENT_TYPE, medium.getMediaDatatype())
                         //.header("Content-Disposition", "attachment; filename="+media.get(0).internalGetTimeReceivedMilis()+".png")
                         .build();

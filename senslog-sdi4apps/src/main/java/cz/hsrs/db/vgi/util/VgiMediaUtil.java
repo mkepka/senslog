@@ -30,10 +30,27 @@ public class VgiMediaUtil {
      * @param mediaType - data type of media, mandatory
      * @throws SQLException
      */
-    public static void insertVgiMedia(int obsId, InputStream media, long fileSize, String mediaType) throws SQLException{
+    public static int insertVgiMedia(int obsId, InputStream media, long fileSize, String mediaType) throws SQLException{
+    	int newMedId = getNextVgiMediaID();
+    	
         String query = "INSERT INTO "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
-                + "(obs_vgi_id, observed_media, media_datatype)"
-                + " VALUES("+obsId+", ?, '"+mediaType+"');";
+                + "(med_id, obs_vgi_id, observed_media, media_datatype)"
+                + " VALUES("+newMedId+", "+obsId+", ?, '"+mediaType+"');";
+        SQLExecutor.insertStream(query, media, fileSize);
+        
+        return newMedId;
+    }
+    
+    /**
+     * Method for inserting new thumbnail of existing VgiMedia file
+     * @param medId - ID of VgiMedia 
+     * @param media - thumbnail as InputStream
+     * @param fileSize - size of file
+     * @throws SQLException
+     */
+    public static void insertVgiMediaThumbnail(int medId, InputStream media, long fileSize) throws SQLException{
+        String query = "UPDATE "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
+                + " SET thumbnail = ? WHERE med_id = "+medId+";";
         SQLExecutor.insertStream(query, media, fileSize);
     }
     
@@ -155,7 +172,7 @@ public class VgiMediaUtil {
                         rs.getInt("obs_vgi_id"),
                         rs.getString("time_received"),
                         rs.getString("media_datatype"),
-                        rs.getBytes("observed_media"));
+                        rs.getBytes("thumbnail"));
                 return medium;
             }
             else{
@@ -163,6 +180,26 @@ public class VgiMediaUtil {
             }
         } catch(SQLException e){
             throw new SQLException(e.getMessage());
+        }
+    }
+	
+    /**
+     * Method selects next value of VgiMedia ID 
+     * @return next value of ID
+     * @throws SQLException when new ID can be selected
+     */
+    private static int getNextVgiMediaID() throws SQLException{
+        try{
+            String selectId = "SELECT nextval('"+SCHEMA_NAME+".observations_vgi_media_med_id_seq'::regclass);";
+            ResultSet resId = SQLExecutor.getInstance().executeQuery(selectId);
+            if(resId.next()){
+                return resId.getInt(1);
+            }
+            else{
+                throw new SQLException("Media can't get new ID!");
+            }
+        } catch(SQLException e){
+            throw new SQLException("Media can't get new ID!");
         }
     }
 }
