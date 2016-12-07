@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.db.util.VgiUtil;
 
 /**
@@ -149,7 +150,7 @@ public class RestUtil {
             atts.accumulate("observedproperty", meas.getString("observedproperty"));
             atts.accumulate("value", meas.getDouble("value"));
             atts.accumulate("uom", meas.getString("uom"));
-            int obs_id = orUtil.processInsertVgiObs(
+            VgiObservation obs = orUtil.processInsertVgiObs(
             		meas.getString("measure_time"),
             		2,
             		"measurement from CITI-sense",
@@ -164,7 +165,7 @@ public class RestUtil {
             		null, 
             		null, 
             		null);
-            System.out.println(obs_id);
+            System.out.println(obs.getObsVgiId());
         }
         buff.close();
     }

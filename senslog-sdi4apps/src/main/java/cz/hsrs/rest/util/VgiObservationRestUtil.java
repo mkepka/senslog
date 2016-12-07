@@ -78,11 +78,12 @@ public class VgiObservationRestUtil {
      * @return ID of new VgiObservation object
      * @throws Exception
      */
-    public int processInsertVgiObs(String timestampValue, Integer catValue, String descValue, String attsValue,
+    public VgiObservation processInsertVgiObs(String timestampValue, Integer catValue, String descValue, String attsValue,
             String unitIdValue, String uuidValue, String userName, Integer datasetId, String lonValue, String latValue, String altValue,
             String dopValue, InputStream fileInStream, String mediaType) throws Exception{
         int obsId = 0;
         int newGid = 0;
+        int newMedId = 0;
         
         // get userId from userName
         int userId = userUt.getUserId(userName);
@@ -132,10 +133,10 @@ public class VgiObservationRestUtil {
                 if(fileInStream != null){
                     try{
                         if(mediaType.startsWith("image/")){
-                            insertImage(fileInStream, obsId, mediaType);
+                            newMedId = insertImage(fileInStream, obsId, mediaType);
                         }
                         else{
-                            insertMedia(obsId, fileInStream, mediaType);
+                            newMedId = insertMedia(obsId, fileInStream, mediaType);
                         }
                     } catch(Exception e){
                         if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
@@ -143,7 +144,7 @@ public class VgiObservationRestUtil {
                         }
                     }
                 }
-                return obsId;
+                return new VgiObservation(obsId, newMedId);
             }
             else{
                 throw new Exception("Mandatory attributes of VGIObservation have to be given!");
@@ -175,12 +176,13 @@ public class VgiObservationRestUtil {
      * @return true if VgiObservation was updated
      * @throws Exception 
      */
-    public boolean processUpdateVgiObs(Integer obsId, String timestampValue, Integer catValue, String descValue,
+    public VgiObservation processUpdateVgiObs(Integer obsId, String timestampValue, Integer catValue, String descValue,
             String attsValue, String unitIdValue, String uuidValue, String userName, Integer datasetId, String lonValue, String latValue, 
             String altValue, String dopValue, InputStream fileInStream, String mediaType) throws Exception {
         // get userId from userName
         int userId = userUt.getUserId(userName);
         boolean updated = false;
+        int newMedId = 0;
         // check of ID of device
         Long unitId = null;
         if((unitIdValue == null || unitIdValue.isEmpty()) && (uuidValue == null || uuidValue.isEmpty())){
@@ -251,16 +253,22 @@ public class VgiObservationRestUtil {
                         if(fileInStream != null){
                             try{
                                 if(mediaType.startsWith("image/")){
-                                    insertImage(fileInStream, obsId, mediaType);
+                                    newMedId = insertImage(fileInStream, obsId, mediaType);
                                 }
                                 else{
-                                    insertMedia(obsId, fileInStream, mediaType);
+                                    newMedId = insertMedia(obsId, fileInStream, mediaType);
                                 }
                             } catch(Exception e){
                                 if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
                                     throw new Exception (e.getMessage());
                                 }
                             }
+                        }
+                        if(updated){
+                            return new VgiObservation(obsId, newMedId);
+                        }
+                        else{
+                        	throw new Exception("VgiObservation cannot be updated!");
                         }
                     }
                     else{
@@ -272,7 +280,9 @@ public class VgiObservationRestUtil {
                 }
             }
         }
-        return updated;
+        else{
+        	throw new Exception("ID of device has to be defined!");
+        }
     }
     
     /**
@@ -455,13 +465,13 @@ public class VgiObservationRestUtil {
     
     /**
      * Method inserts new VgiMedia to DB
-     * @param fileInStream
+     * @param fileInStream - InputStream containing image file
      * @param obsId - ID of associated VgiObservation object
      * @param mediaType - Data type of media
-     * @return
+     * @return ID of new VgiMedia object
      * @throws Exception
      */
-    public boolean insertImage(InputStream fileInStream, int obsId, String mediaType) throws Exception{
+    public int insertImage(InputStream fileInStream, int obsId, String mediaType) throws Exception{
         if(fileInStream != null){
             try{
                 BufferedImage photo = ImageIO.read(fileInStream);
@@ -490,7 +500,7 @@ public class VgiObservationRestUtil {
                     InputStream isThumb = new ByteArrayInputStream(thumbArr);
                     VgiMediaUtil.insertVgiMediaThumbnail(medId, isThumb, thumbArr.length);
                     
-                    return true;
+                    return medId;
                 }
                 else{
                     throw new Exception("Any media was given!");
@@ -511,17 +521,17 @@ public class VgiObservationRestUtil {
      * @param obsId - ID of associated VgiObservation object
      * @param fileInStream - InputStream containing associated MediaFile 
      * @param mediaType - MediaType of associated file
-     * @return true if VgiMedia object was inserted
+     * @return ID of VgiMedia object that was inserted
      * @throws Exception
      */
-    public boolean insertMedia(int obsId, InputStream fileInStream, String mediaType) throws Exception{
+    public int insertMedia(int obsId, InputStream fileInStream, String mediaType) throws Exception{
         if(fileInStream != null){
             try{
                 byte[] mediaArr = IOUtils.toByteArray(fileInStream);
                 if(mediaArr != null && mediaArr.length != 0 && mediaType != null && !mediaType.isEmpty()){
                     InputStream is = new ByteArrayInputStream(mediaArr);
-                    VgiMediaUtil.insertVgiMedia(obsId, is, mediaArr.length, mediaType);
-                    return true;
+                    int medId = VgiMediaUtil.insertVgiMedia(obsId, is, mediaArr.length, mediaType);
+                    return medId;
                 }
                 else{
                     throw new Exception("Any media was given!");
@@ -586,24 +596,24 @@ public class VgiObservationRestUtil {
      * @param file - media file as InputStream 
      * @param mediaType - data type of media file
      * @param userName - name of user that owns master VgiObsrevation
-     * @return true if media file was inserted
+     * @return ID of VgiMedia file that was inserted
      * @throws SQLException
      */
-    public boolean processInsertNextMedia(int obsId, InputStream file, String mediaType, String userName) throws Exception{
+    public VgiObservation processInsertNextMedia(int obsId, InputStream file, String mediaType, String userName) throws Exception{
         try{
             // get userId from userName
             int userId = userUt.getUserId(userName);
             // check existence of master VgiObservation
             VgiObservation obs = oUtil.getVgiObservationByObsId(obsId, userId);
             if(obs != null && file != null){
-                boolean inserted = false;
+                int newMedId;
                 if(mediaType.startsWith("image/")){
-                    inserted = insertImage(file, obsId, mediaType);
+                    newMedId = insertImage(file, obsId, mediaType);
                 }
                 else{
-                    inserted = insertMedia(obsId, file, mediaType);
+                    newMedId = insertMedia(obsId, file, mediaType);
                 }
-                return inserted;
+                return new VgiObservation(obsId, newMedId);
             }
             else{
                 throw new Exception("VgiObservation with given ID of  was not found!");

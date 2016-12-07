@@ -23,6 +23,7 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import cz.hsrs.db.model.NoItemFoundException;
+import cz.hsrs.db.model.vgi.VgiObservation;
 import cz.hsrs.rest.util.BasicAuth;
 import cz.hsrs.rest.util.RestUtil;
 import cz.hsrs.rest.util.VgiObservationRestUtil;
@@ -275,17 +276,17 @@ public class VgiRest {
             }
 
             if(obsId == null){
-                int newObsId = orUtil.processInsertVgiObs(timestampValue, catValue, descValue, attsValue,
+            	VgiObservation newObs = orUtil.processInsertVgiObs(timestampValue, catValue, descValue, attsValue,
                         unitIdValue, null, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
                         fileInStream, mediaType);
-                return Response.ok(String.valueOf(newObsId), MediaType.TEXT_PLAIN)
+                return Response.ok(String.valueOf(newObs.getObsVgiId()), MediaType.TEXT_PLAIN)
                         .build();
             }
             else{
-                boolean inserted = orUtil.processUpdateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
+            	VgiObservation inserted = orUtil.processUpdateVgiObs(obsId, timestampValue, catValue, descValue, attsValue,
                         unitIdValue, null, userName, datasetIdValue, lonValue, latValue, altValue, dopValue, 
                         fileInStream, mediaType);
-                return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
+                return Response.ok(String.valueOf(inserted.getObsVgiId()), MediaType.TEXT_PLAIN)
                         .build();
             }
         } catch (Exception e) {

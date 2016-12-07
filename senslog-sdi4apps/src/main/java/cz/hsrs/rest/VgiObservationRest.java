@@ -73,7 +73,6 @@ public class VgiObservationRest {
     //@Path("/") // not necessary to specify Path
     @POST
     @Consumes("multipart/form-data; charset=UTF-8")
-    //@Consumes("multipart/form-data")
     public Response insertObservation(
             @FormDataParam(VgiParams.OBS_VGI_ID_NAME) Integer obsId,
             @FormDataParam(VgiParams.TIMESTAMP_NAME) String timestampValue,
@@ -98,12 +97,9 @@ public class VgiObservationRest {
             if(userName == null){
                 userName = "tester";
             }
-            /*if(mediaType == null){
-                mediaType = "image/png";
-            }*/
             if(obsId == null){
                 // process INSERT
-                int newObsId = orUtil.processInsertVgiObs(
+                VgiObservation newObs = orUtil.processInsertVgiObs(
                         timestampValue,
                         catValue,
                         descValue,
@@ -113,13 +109,13 @@ public class VgiObservationRest {
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,
                         fileInStream, mediaType);
-                return Response.ok(String.valueOf(newObsId))
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                return Response.ok(newObs)
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                         .build();
             }
             else{
                 // process UPDATE
-                boolean updated = orUtil.processUpdateVgiObs(obsId,
+                VgiObservation updatedObs = orUtil.processUpdateVgiObs(obsId,
                         timestampValue,
                         catValue,
                         descValue,
@@ -129,8 +125,8 @@ public class VgiObservationRest {
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,
                         fileInStream, mediaType);
-                return Response.ok(String.valueOf(updated))
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                return Response.ok(updatedObs)
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                         .build();
             }
         } catch (Exception e) {
@@ -192,7 +188,7 @@ public class VgiObservationRest {
             }
             if(obsId != null){
                 // process UPDATE
-                boolean updated = orUtil.processUpdateVgiObs(obsId,
+                VgiObservation updatedObs = orUtil.processUpdateVgiObs(obsId,
                         timestampValue,
                         catValue,
                         descValue,
@@ -202,8 +198,8 @@ public class VgiObservationRest {
                         datasetIdValue,
                         lonValue, latValue, altValue, dopValue,
                         fileInStream, mediaType);
-                return Response.ok(String.valueOf(updated))
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN)
+                return Response.ok(updatedObs)
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON)
                         .build();
             }
             else{
@@ -374,8 +370,8 @@ public class VgiObservationRest {
         if(obsId != null && userName != null && fileInStream != null){
             try{
                 VgiObservationRestUtil orUtil = new VgiObservationRestUtil();
-                boolean inserted = orUtil.processInsertNextMedia(obsId, fileInStream, userName, mediaType);
-                return Response.ok(String.valueOf(inserted), MediaType.TEXT_PLAIN)
+                VgiObservation insertedObs = orUtil.processInsertNextMedia(obsId, fileInStream, userName, mediaType);
+                return Response.ok(insertedObs, MediaType.APPLICATION_JSON)
                         .build();
             } catch(Exception e){
                 return Response.serverError().entity(e.getMessage())

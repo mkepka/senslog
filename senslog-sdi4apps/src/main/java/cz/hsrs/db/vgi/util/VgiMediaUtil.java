@@ -28,11 +28,12 @@ public class VgiMediaUtil {
      * @param media - InputStream with media to be inserted, mandatory
      * @param fileSize - size of media file to be inserted, mandatory 
      * @param mediaType - data type of media, mandatory
+     * @return ID of inserted VgiMedia object
      * @throws SQLException
      */
     public static int insertVgiMedia(int obsId, InputStream media, long fileSize, String mediaType) throws SQLException{
-    	int newMedId = getNextVgiMediaID();
-    	
+        int newMedId = getNextVgiMediaID();
+        
         String query = "INSERT INTO "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
                 + "(med_id, obs_vgi_id, observed_media, media_datatype)"
                 + " VALUES("+newMedId+", "+obsId+", ?, '"+mediaType+"');";
@@ -159,7 +160,7 @@ public class VgiMediaUtil {
      * @return VgiMedia object containing only thumbnail as bytea  
      * @throws SQLException
      */
-	public VgiMedia getVgiMediaThumbnail(Integer obsId, Integer mediaId) throws SQLException {
+    public VgiMedia getVgiMediaThumbnail(Integer obsId, Integer mediaId) throws SQLException {
         try{
             String select = "SELECT med_id, obs_vgi_id, time_received, media_datatype, thumbnail"
                     + " FROM "+SCHEMA_NAME+"."+MEDIA_TABLE_NAME+""
@@ -182,7 +183,7 @@ public class VgiMediaUtil {
             throw new SQLException(e.getMessage());
         }
     }
-	
+    
     /**
      * Method selects next value of VgiMedia ID 
      * @return next value of ID

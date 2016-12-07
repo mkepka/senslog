@@ -15,7 +15,7 @@ import cz.hsrs.db.vgi.util.VgiParams;
 @XmlRootElement
 public class VgiObservation {
 
-	@XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
+    @XmlElement(name = VgiParams.OBS_VGI_ID_NAME)
     private int obsVgiId;
     private Integer gid;
     private Double x;
@@ -32,12 +32,14 @@ public class VgiObservation {
     private int datasetId;
     @XmlElement(name = VgiParams.UNIT_ID_NAME)
     private long unitId;
-    @XmlElement(name = "user_id")
+    @XmlElement(name = VgiParams.USER_ID_NAME)
     private int userId;
-    @XmlElement(name = "time_received")
+    @XmlElement(name = VgiParams.TIME_RECEIVED_NAME)
     private String timeReceived;
-    @XmlElement(name = "media_count")
+    @XmlElement(name = VgiParams.MEDIA_COUNT_NAME)
     private int mediaCount;
+    @XmlElement(name = VgiParams.MEDIA_ID_NAME)
+    private int medId;
     
     /**
      * Prepared list of attributes to be select from DB in following order:
@@ -58,7 +60,7 @@ public class VgiObservation {
      * up.dop
      */
     public static final String SELECT_ATTRIBUTES = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp,"
-    		+ " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+            + " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
             + " ov.time_received, ov.media_count, st_x(up.the_geom), st_y(up.the_geom), up.altitude, up.dop";
     /**
      * Prepared list of attributes to be select from DB for GeoJSON in following order:
@@ -78,13 +80,23 @@ public class VgiObservation {
      * up.dop
      */
     public static final String SELECT_ATTRIBUTES_GEOJSON = "SELECT ov.obs_vgi_id, ov.gid, ov.time_stamp,"
-    		+ " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
+            + " ov.category_id, ov.description, ov.attributes, ov.dataset_id, ov.unit_id, ov.user_id,"
             + " ov.time_received, ov.media_count, st_asgeojson(up.the_geom, 10), up.altitude, up.dop";
     
     /**
      * Empty constructor for serialization
      */
     public VgiObservation(){
+    }
+    
+    /**
+     * Short constructor for inserting new VgiObservation
+     * @param obsVgiId - ID of VgiObservation object
+     * @param medId - ID of VgiMedia object that was inserted together with VgiObservation
+     */
+    public VgiObservation(int obsVgiId, int medId){
+    	this.obsVgiId = obsVgiId;
+    	this.medId = medId;
     }
     
     /**
@@ -236,11 +248,18 @@ public class VgiObservation {
     }
     
     /**
+     * @return the mediaCount
+     */
+    public int getMedId() {
+        return medId;
+    }
+    
+    /**
      * 
      * @return
      */
     public Double getX(){
-    	return this.x;
+        return this.x;
     }
 
     /**
@@ -248,7 +267,7 @@ public class VgiObservation {
      * @return
      */
     public Double getY(){
-    	return this.y;
+        return this.y;
     }
     
     /**
@@ -256,7 +275,7 @@ public class VgiObservation {
      * @return
      */
     public Double getAltitude(){
-    	return this.altitude;
+        return this.altitude;
     }
     
     /**
@@ -264,7 +283,7 @@ public class VgiObservation {
      * @return
      */
     public Double getDOP(){
-    	return this.dop;
+        return this.dop;
     }
     /* (non-Javadoc)
      * @see java.lang.Object#toString()
