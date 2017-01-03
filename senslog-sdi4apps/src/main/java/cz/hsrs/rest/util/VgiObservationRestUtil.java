@@ -46,7 +46,8 @@ public class VgiObservationRestUtil {
     private VgiObservationUtil oUtil;
     private VgiMediaUtil mUtil;
     
-    private static final int THUMBNAIL_RATIO = 8;
+    //private static final int THUMBNAIL_RATIO = 8;
+    private static final int THUMBNAIL_WIDTH = 100;
     
     /**
      * Constructor instances related Utility classes
@@ -480,11 +481,27 @@ public class VgiObservationRestUtil {
                     String[] parsedMediaType = mediaType.split("/");
                     //String typeMediaType = parsedMediaType[0];
                     String formatMediaType = parsedMediaType[1];
-                    
+                    /*
                     // create thumbnail of picture
                     int tW = photo.getWidth()/THUMBNAIL_RATIO;
                     int tH = photo.getHeight()/THUMBNAIL_RATIO;
                     BufferedImage thumb = VgiUtil.rescale(photo, tW, tH);
+                    */
+                    // create thumbnail of picture
+                    BufferedImage thumb;
+                    double thumbRatio = 0;
+                    int tWidthOrig = photo.getWidth();
+                    // if original photo is wider than thumbnail width then rescale
+                    if((tWidthOrig >= THUMBNAIL_WIDTH) == true){
+                    	thumbRatio = (double) tWidthOrig/ (double) THUMBNAIL_WIDTH;
+                    	double tWidth = tWidthOrig/thumbRatio;
+                    	double tHeight = photo.getHeight()/thumbRatio;
+                    	thumb = VgiUtil.rescale(photo, (int)tWidth, (int)tHeight);
+                    }
+                    // if original photo is narrow than thumbnail width then thumbnail == photo
+                    else{
+                    	thumb = photo;
+                    }
                     
                     //write picture to database
                     ByteArrayOutputStream baosImg = new ByteArrayOutputStream();

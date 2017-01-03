@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cz.hsrs.rest;
+package cz.hsrs.rest.vgi;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

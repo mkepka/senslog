@@ -1,4 +1,4 @@
-package cz.hsrs.rest;
+package cz.hsrs.rest.vgi;
 
 import java.io.IOException;
 import java.io.InputStream;
