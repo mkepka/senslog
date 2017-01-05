@@ -150,7 +150,7 @@
       <init-param>
         <param-name>com.sun.jersey.config.property.packages</param-name>
         <!--<param-name>jersey.config.server.provider.packages</param-name>-->
-        <param-value>cz.hsrs.rest</param-value>
+        <param-value>cz.hsrs.rest, cz.hsrs.rest.vgi</param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
       <init-param>

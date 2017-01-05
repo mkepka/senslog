@@ -2,6 +2,7 @@ package cz.hsrs.db.vgi.util;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import cz.hsrs.db.model.vgi.Envelope2D;
 import cz.hsrs.db.model.vgi.VgiObservation;
+import cz.hsrs.db.model.vgi.VgiObservationRdf;
 import cz.hsrs.db.pool.SQLExecutor;
 
 /**
@@ -165,6 +167,45 @@ public class VgiObservationUtil {
     }
     
     /**
+     * Method selects VgiObservation object by given ID prepared for RDF format
+     * @param obsId - ID of VgiObservation object
+     * @param userId - ID of user that owns given VgiObservation object
+     * @return VgiObservation object for RDF format
+     * @throws SQLException
+     */
+    public VgiObservationRdf getVgiObservationByObsIdForRdf(int obsId, int userId) throws SQLException{
+        try{
+            String query = "SELECT ov.obs_vgi_id, date(ov.time_stamp), ov.category_id, ov.description,"
+                    + " ov.attributes::json->>'name' AS name, ov.dataset_id, ov.unit_id, ov.user_id,"
+                    + " ov.media_count, st_astext(up.the_geom) AS geom"
+                    + " FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up"
+                    + " WHERE ov.user_id = "+userId+""
+                    + " AND ov.obs_vgi_id = "+obsId+""
+                    + " AND ov.gid = up.gid;";
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query);
+            if(res.next()){
+                VgiObservationRdf obs = new VgiObservationRdf(
+                        res.getInt("obs_vgi_id"),
+                        res.getString("date"),
+                        res.getInt("category_id"),
+                        res.getString("description"),
+                        res.getString("name"),
+                        res.getInt("dataset_id"),
+                        res.getLong("unit_id"),
+                        res.getInt("user_id"),
+                        res.getInt("media_count"),
+                        res.getString("geom"));
+                return obs;
+            }
+            else{
+                return null;
+            }
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
      * Method selects VGI observation objects by given filter parameters
      * @param userId - user ID that has VgiObservation
      * @param fromTime - beginning of time frame, optional
@@ -250,6 +291,69 @@ public class VgiObservationUtil {
             ResultSet res = SQLExecutor.getInstance().executeQuery(query);
             LinkedList<JSONObject> vgiObsList = convertVgiObsResultSet2GeoJSON(res);
             return vgiObsList;
+        } catch(SQLException e){
+            throw new SQLException(e.getMessage());
+        }
+    }
+    
+    /**
+     * Method selects List<VgiObservationRdf> object by user prepared for RDF format
+     * @param userId - ID of user that owns given VgiObservation object
+     * @param fromTime - beginning of time frame, optional
+     * @param toTime - end of time frame, optional
+     * @param categoryId - ID of VgiCategory
+     * @param datasetId - ID of VgiDataset 
+     * @param extent - spatial extent that features should intersect 
+     * @param unitId - ID of unit that produced VgiObservation
+     * @return List<VgiObservationRdf> object for RDF format
+     * @throws SQLException
+     */
+    public List<VgiObservationRdf> getVgiObservationsByUserForRdf(int userId, String fromTime, String toTime, 
+            Integer categoryId, Integer datasetId, Envelope2D extent, Long unitId) throws SQLException{
+        try{
+            StringBuilder query = new StringBuilder();
+            query.append("SELECT ov.obs_vgi_id, date(ov.time_stamp), ov.category_id, ov.description,"
+                    + " ov.attributes::json->>'name' AS name, ov.dataset_id, ov.unit_id, ov.user_id,"
+                    + " ov.media_count, st_astext(up.the_geom) AS geom");
+            query.append(" FROM "+VGI_SCHEMA_NAME+"."+OBSERVATION_TABLE_NAME+" ov, "+SENSLOG_SCHEMA_NAME+".units_positions up");
+            query.append(" WHERE ov.user_id = "+userId+"");
+            if(fromTime != null && !fromTime.isEmpty()){
+                query.append(" AND ov.time_stamp >= '"+fromTime+"'");
+            }
+            if(toTime != null && !toTime.isEmpty()){
+                query.append(" AND ov.time_stamp <= '"+toTime+"'");
+            }
+            if(categoryId != null){
+                query.append(" AND ov.category_id = "+categoryId+"");
+            }
+            if(datasetId != null){
+                query.append(" AND ov.dataset_id = "+datasetId+"");
+            }
+            if(extent != null){
+                query.append(" AND up.geom && ST_MakeEnvelope("+extent.getXMin()+", "+extent.getYMin()+", "+extent.getXMax()+", "+extent.getYMax()+", "+extent.getSRID()+")");
+            }
+            if(unitId != null){
+                query.append(" AND ov.unit_id = "+unitId);
+            }
+            query.append(" AND ov.gid = up.gid;");
+            
+            ResultSet res = SQLExecutor.getInstance().executeQuery(query.toString());
+            List<VgiObservationRdf> obsList = new ArrayList<VgiObservationRdf>(); 
+            while(res.next()){
+                VgiObservationRdf obs = new VgiObservationRdf(
+                        res.getInt("obs_vgi_id"),
+                        res.getString("date"),
+                        res.getInt("category_id"),
+                        res.getString("description"),
+                        res.getString("name"),
+                        res.getInt("dataset_id"),
+                        res.getLong("unit_id"),
+                        res.getInt("user_id"),
+                        res.getInt("media_count"),
+                        res.getString("geom"));
+                obsList.add(obs);
+            }
+            return obsList;
         } catch(SQLException e){
             throw new SQLException(e.getMessage());
         }
