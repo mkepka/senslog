@@ -74,4 +74,5 @@ public class VgiParams {
      */
     public static final String FORMAT_NAME = "format";
     public static final String FORMAT_GEOJSON_NAME = "geojson";
+    public static final String FORMAT_RDF_XML_NAME = "rdf+xml";
 }

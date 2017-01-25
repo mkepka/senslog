@@ -29,8 +29,6 @@ public class UnitPosition implements DBObject {
     private final String first_timestamp;
     
     public static final String SELECT = "gid, unit_id, time_stamp, st_x(the_geom), st_y(the_geom), speed, st_srid(the_geom) ";
-    //private final SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-    //private final SimpleDateFormat formaterSecond = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssZ");
     private static final String SCHEMA_NAME = "public";
     //private static final String ALTITUDE_COLUMN = "altitude";
     //private static final String DATASET_TABLE_NAME = "units_positions";
@@ -236,8 +234,13 @@ public class UnitPosition implements DBObject {
         return y;
     }
     
-    public double getAlt(){
-        return alt;
+    public Double getAlt(){
+    	if(Double.isNaN(alt)){
+    		return null;
+    	}
+    	else{
+    		return alt;
+    	}
     }
     
     public String getSRID(){
@@ -374,8 +377,13 @@ public class UnitPosition implements DBObject {
     /**
      * @return the dop
      */
-    public double getDop() {
-        return dop;
+    public Double getDop() {
+    	if(Double.isNaN(dop)){
+    		return null;
+    	}
+    	else{
+    		return dop;
+    	}
     }
 
     /**

@@ -92,11 +92,17 @@ public class DBJsonUtils {
           return obj;
     }
     
+    /**
+     * Method writes list of DBObjects to given PrintWriter as JSON
+     * @param writer
+     * @param res
+     * @throws SQLException
+     */
     public static void writeJSON(PrintWriter writer, List<? extends DBObject> res ) throws SQLException{
         
         writer.print("[");
         boolean first=true;
-        Iterator i = res.iterator();
+        Iterator<? extends DBObject> i = res.iterator();
         while (i.hasNext()) {
                 if (!first){
                     writer.println(",");
@@ -108,8 +114,6 @@ public class DBJsonUtils {
             //DBObject gr = (element.getClass().newInstance()).getDBObject(res);
             JSONObject jsonObj = JSONObject.fromObject(i.next());
             writer.print(jsonObj);
-            //System.out.println(jsonObj);
-            
         }
         writer.println("]");
         //writer.println("Nekomprimovano!");
@@ -117,7 +121,7 @@ public class DBJsonUtils {
     
     public static void writeJSONCompressed(GZIPOutputStream gzOut, List<? extends DBObject> res ) throws SQLException{
         boolean first=true;
-        Iterator i = res.iterator();
+        Iterator<? extends DBObject> i = res.iterator();
         String row="";
         row += "[";
         try {
