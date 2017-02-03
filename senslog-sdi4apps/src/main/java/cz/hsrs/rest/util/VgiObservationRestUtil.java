@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -212,9 +213,10 @@ public class VgiObservationRestUtil {
                     catValue != null &&
                     datasetId != null){
                     
-                    Date posDate = DateUtil.parseTimestamp(timestampValue);
+                    Date newPosDate = DateUtil.parseTimestamp(timestampValue);
                     UnitPosition oldPos = unitUt.getPositionByGid(oldObs.getGid());
                     boolean updatedPos = false;
+                    int insGid;
                     
                     Double newLon = Double.parseDouble(lonValue);
                     Double newLat = Double.parseDouble(latValue);
@@ -224,27 +226,52 @@ public class VgiObservationRestUtil {
                     if(oldPos.getX() == newLon &&
                         oldPos.getY() == newLat &&
                         oldPos.getAlt() == newAlt &&
-                        oldPos.internalGetTimestamp() == posDate){
-                        // not update position
+                        oldPos.internalGetTimestamp() == newPosDate){
+                        // not necessary to update position
                         updatedPos = true;
+                        insGid = oldPos.getGid();
                     } else{
-                        UnitPosition newPos = new UnitPosition(oldPos.getGid(),
-                                oldPos.getUnit_id(), 
-                                newLon,
-                                newLat,
-                                newAlt,
-                                posDate,
-                                newDop,
-                                Double.NaN,
-                                "4326"); 
-                        updatedPos = DatabaseFeedOperation.updatePositionByGid(newPos);
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(newPosDate);
+                        int newMonth = cal.get(Calendar.MONTH);
+                        cal.setTime(oldPos.internalGetTimestamp());
+                        int oldMonth = cal.get(Calendar.MONTH);
+                        
+                        if(newMonth != oldMonth){
+                            // delete old one !!!
+                            
+                            //insert new with some equal attributes
+                            int newGid = DatabaseFeedOperation.insertPositionByGid(
+                                    oldPos.getUnit_id(),
+                                    newLat, 
+                                    newLon,
+                                    newAlt,
+                                    newDop,
+                                    newPosDate, 
+                                    Double.NaN, 
+                                    "4326");
+                            insGid = newGid;
+                        }
+                        else{
+                            UnitPosition newPos = new UnitPosition(oldPos.getGid(),
+                                    oldPos.getUnit_id(), 
+                                    newLon,
+                                    newLat,
+                                    newAlt,
+                                    newPosDate,
+                                    newDop,
+                                    Double.NaN,
+                                    "4326"); 
+                            updatedPos = DatabaseFeedOperation.updatePositionByGid(newPos);
+                            insGid = oldPos.getGid();
+                        }
                     }
                     // update observation
                     if(updatedPos){
                         updated = VgiObservationUtil.updateVgiObs(
                                 obsId,
-                                oldPos.getGid(),
-                                DateUtil.formatSecsTZ.format(posDate), 
+                                insGid,
+                                DateUtil.formatSecsTZ.format(newPosDate), 
                                 catValue,
                                 descValue,
                                 attsValue,
@@ -269,7 +296,7 @@ public class VgiObservationRestUtil {
                             return new VgiObservation(obsId, newMedId);
                         }
                         else{
-                        	throw new Exception("VgiObservation cannot be updated!");
+                            throw new Exception("VgiObservation cannot be updated!");
                         }
                     }
                     else{
@@ -282,7 +309,7 @@ public class VgiObservationRestUtil {
             }
         }
         else{
-        	throw new Exception("ID of device has to be defined!");
+            throw new Exception("ID of device has to be defined!");
         }
     }
     
@@ -493,14 +520,14 @@ public class VgiObservationRestUtil {
                     int tWidthOrig = photo.getWidth();
                     // if original photo is wider than thumbnail width then rescale
                     if((tWidthOrig >= THUMBNAIL_WIDTH) == true){
-                    	thumbRatio = (double) tWidthOrig/ (double) THUMBNAIL_WIDTH;
-                    	double tWidth = tWidthOrig/thumbRatio;
-                    	double tHeight = photo.getHeight()/thumbRatio;
-                    	thumb = VgiUtil.rescale(photo, (int)tWidth, (int)tHeight);
+                        thumbRatio = (double) tWidthOrig/ (double) THUMBNAIL_WIDTH;
+                        double tWidth = tWidthOrig/thumbRatio;
+                        double tHeight = photo.getHeight()/thumbRatio;
+                        thumb = VgiUtil.rescale(photo, (int)tWidth, (int)tHeight);
                     }
                     // if original photo is narrow than thumbnail width then thumbnail == photo
                     else{
-                    	thumb = photo;
+                        thumb = photo;
                     }
                     
                     //write picture to database

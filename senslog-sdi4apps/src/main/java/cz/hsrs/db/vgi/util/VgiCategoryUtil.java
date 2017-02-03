@@ -35,10 +35,10 @@ public class VgiCategoryUtil {
                         res.getInt("category_id"),
                         res.getString("category_name"),
                         res.getString("description"),
-                        Integer.valueOf(res.getString("parent_id")),
-                        Integer.valueOf(res.getString("category_level")),
-                        Integer.valueOf(res.getString("lft")),
-                        Integer.valueOf(res.getString("rgt")));
+                        (res.getString("parent_id")!= null ? Integer.parseInt(res.getString("parent_id")) : null),
+                        (res.getString("category_level") != null ? Integer.valueOf(res.getString("category_level")) : null),
+                        (res.getString("lft") != null ? Integer.valueOf(res.getString("lft")) : null),
+                        (res.getString("rgt") != null ? Integer.valueOf(res.getString("rgt")) : null));
                 return cat;
             }
             else{
@@ -67,10 +67,10 @@ public class VgiCategoryUtil {
                         res.getInt("category_id"),
                         res.getString("category_name"),
                         res.getString("description"),
-                        Integer.valueOf(res.getString("parent_id")),
-                        Integer.valueOf(res.getString("category_level")),
-                        Integer.valueOf(res.getString("lft")),
-                        Integer.valueOf(res.getString("rgt")));
+                        (res.getString("parent_id")!= null ? Integer.parseInt(res.getString("parent_id")) : null),
+                        (res.getString("category_level") != null ? Integer.valueOf(res.getString("category_level")) : null),
+                        (res.getString("lft") != null ? Integer.valueOf(res.getString("lft")) : null),
+                        (res.getString("rgt") != null ? Integer.valueOf(res.getString("rgt")) : null));
                 
                 LinkedList<VgiCategory> catList = new LinkedList<VgiCategory>();
                 String queryDesc;
@@ -93,10 +93,10 @@ public class VgiCategoryUtil {
                             resDesc.getInt("category_id"),
                             resDesc.getString("category_name"),
                             resDesc.getString("description"),
-                            Integer.valueOf(resDesc.getString("parent_id")),
-                            Integer.valueOf(resDesc.getString("category_level")),
-                            Integer.valueOf(resDesc.getString("lft")),
-                            Integer.valueOf(resDesc.getString("rgt")));
+                            (res.getString("parent_id")!= null ? Integer.parseInt(res.getString("parent_id")) : null),
+                            (res.getString("category_level") != null ? Integer.valueOf(res.getString("category_level")) : null),
+                            (res.getString("lft") != null ? Integer.valueOf(res.getString("lft")) : null),
+                            (res.getString("rgt") != null ? Integer.valueOf(res.getString("rgt")) : null));
                     catList.add(cat);
                 }
                 return catList;

@@ -102,7 +102,7 @@ public class VgiCategoryRest {
     
     /**
      * Service for selecting all VgiCategory objects 
-     * URL: /rest/vgi/category/select?user_name=
+     * URL: /rest/vgi/category?user_name=
      * @param userName - name of user
      * @return List of VgiCategory objects as JSON
      */

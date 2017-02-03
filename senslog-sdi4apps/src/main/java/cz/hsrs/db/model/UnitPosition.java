@@ -234,13 +234,18 @@ public class UnitPosition implements DBObject {
         return y;
     }
     
+    /**
+     * Method returns Altitude of the Positions
+     * @return double value if position is defined, 
+     * NULL if altitude is NaN or null
+     */
     public Double getAlt(){
-    	if(Double.isNaN(alt)){
-    		return null;
-    	}
-    	else{
-    		return alt;
-    	}
+        if(Double.isNaN(alt)){
+            return null;
+        }
+        else{
+            return alt;
+        }
     }
     
     public String getSRID(){
@@ -375,15 +380,16 @@ public class UnitPosition implements DBObject {
     }
     
     /**
-     * @return the dop
+     * Method returns DOP value of Position
+     * @return the dop double value, NULL if dop is NaN or null
      */
     public Double getDop() {
-    	if(Double.isNaN(dop)){
-    		return null;
-    	}
-    	else{
-    		return dop;
-    	}
+        if(Double.isNaN(dop)){
+            return null;
+        }
+        else{
+            return dop;
+        }
     }
 
     /**

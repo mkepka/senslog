@@ -13,15 +13,14 @@ public class Start {
 
     public static void start() throws Exception {
         try {
-
             SocketConnector connector = new SocketConnector();
             connector.setPort(8080);
 
             server.setConnectors(new Connector[] { connector });
             WebAppContext context = new WebAppContext();
             context.setServer(server);
-            context.setContextPath("/DBService");
-            //context.setContextPath("/");
+            //context.setContextPath("/DBService");
+            context.setContextPath("/");
             context.setWar("src/main/webapp");
             server.addHandler(context);
             SQLExecutor.setConfigfile("local_logging.properties");

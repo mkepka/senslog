@@ -177,14 +177,46 @@ public class DatabaseFeedOperation {
         update.append("UPDATE "+SCHEMA_NAME+".units_positions SET ");
         update.append("the_geom = "+p.getPostgisString()+", ");
         update.append("time_stamp = '"+p.getTime_stamp()+"', ");
-        
-        String speed = Double.isNaN(p.getSpeed()) ? "NULL" : String.valueOf(p.getSpeed());
-        update.append("speed = "+speed+", ");
-        String dop = Double.isNaN(p.getDop()) ? "NULL" : String.valueOf(p.getDop());
-        update.append("dop = "+dop);
+        // ------------- SPEED ------------------
+        String speedStr;
+        Double speed = p.getSpeed();
+        if(speed == null){
+            speedStr = "NULL";
+        }
+        else if(speed != null && Double.isNaN(speed)){
+            speedStr = "NULL";
+        }
+        else{
+            speedStr = String.valueOf(speed);
+        }
+        update.append("speed = "+speedStr+", ");
+        // ------------- DOP ------------------
+        String dopStr;
+        Double dop = p.getDop();
+        if(dop == null){
+            dopStr = "NULL";
+        }
+        else if(dop != null && Double.isNaN(dop)){
+            dopStr = "NULL";
+        }
+        else{
+            dopStr = String.valueOf(dop);
+        }
+        update.append("dop = "+dopStr);
+        // ------------- ALT ------------------
         if(SQLExecutor.isAltitudeEnabled()){
-            String alt = Double.isNaN(p.getAlt()) ? "NULL" : String.valueOf(p.getAlt());
-            update.append(", altitude = "+alt+" ");
+            String altStr;
+            Double alt = p.getAlt();
+            if(alt == null){
+                altStr = "NULL";
+            }
+            else if(alt != null && Double.isNaN(alt)){
+                altStr = "NULL";
+            }
+            else{
+                altStr = String.valueOf(alt);
+            }
+            update.append(", altitude = "+altStr+" ");
         }
         update.append("WHERE gid = "+p.getGid());
         String query = update.toString();
