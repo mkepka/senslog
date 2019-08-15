@@ -9,96 +9,116 @@
         servlets/ JSPs/ etc
     -->
 
-    <servlet>
-        <description>
-        </description>
-        <display-name>FeederServlet</display-name>
-        <servlet-name>FeederServlet</servlet-name>
-        <servlet-class>cz.hsrs.servlet.feeder.FeederServlet</servlet-class>
-    </servlet>
+<!--
+    <init-param>
+        <param-name>development</param-name>
+        <param-value>false</param-value>
+    </init-param>
+-->
+    <listener>
+        <listener-class>cz.hsrs.servlet.security.SessionListener</listener-class>
+        <!-- <description>sessionListener</description>-->        
+    </listener>
     
-    <servlet-mapping>
-        <servlet-name>FeederServlet</servlet-name>
-        <url-pattern>/FeederServlet</url-pattern>
-    </servlet-mapping>
+    <listener>
+        <listener-class>cz.hsrs.rest.SCListener</listener-class>
+        <!--<description>servletListener</description>-->
+    </listener>
 
     <servlet>
-        <description>
-        </description>
-        <display-name>ChartServlet</display-name>
+        <servlet-name>FeederServlet</servlet-name>
+        <display-name>FeederServlet</display-name>        
+        <servlet-class>cz.hsrs.servlet.feeder.FeederServlet</servlet-class>
+    </servlet>
+
+    <servlet>
         <servlet-name>ChartServlet</servlet-name>
+        <display-name>ChartServlet</display-name>        
         <servlet-class>cz.hsrs.servlet.provider.ChartServlet</servlet-class>
     </servlet>
 
     <servlet>
-        <description>
-        </description>
-        <display-name>SensorService</display-name>
         <servlet-name>SensorService</servlet-name>
+        <display-name>SensorService</display-name>        
         <servlet-class>cz.hsrs.servlet.provider.SensorService</servlet-class>
     </servlet>
 
     <servlet>
-        <description>
-        </description>
-        <display-name>AlertService</display-name>
         <servlet-name>AlertService</servlet-name>
+        <display-name>AlertService</display-name>        
         <servlet-class>cz.hsrs.servlet.provider.AlertService</servlet-class>
     </servlet>
     
     <servlet>
-        <description>
-        </description>
-        <display-name>MMService</display-name>
         <servlet-name>MMService</servlet-name>
+        <display-name>MMService</display-name>
         <servlet-class>cz.hsrs.servlet.provider.MMService</servlet-class>
     </servlet>
 
     <servlet>
-        <description>
-        </description>
-        <display-name>DataService</display-name>
         <servlet-name>DataService</servlet-name>
+        <display-name>DataService</display-name>
         <servlet-class>cz.hsrs.servlet.provider.DataService</servlet-class>
     </servlet>
+    
     <servlet>
-        <description>
-        </description>
-        <display-name>GroupService</display-name>
         <servlet-name>GroupService</servlet-name>
+        <display-name>GroupService</display-name>
         <servlet-class>cz.hsrs.servlet.provider.GroupService</servlet-class>
     </servlet>
 
     <servlet>
-        <description>
-        </description>
-        <display-name>ControllerServlet</display-name>
         <servlet-name>ControllerServlet</servlet-name>
+        <display-name>ControllerServlet</display-name>
         <servlet-class>cz.hsrs.servlet.security.ControllerServlet</servlet-class>
     </servlet>
     <servlet>
-        <description>
-        </description>
-        <display-name>Logout</display-name>
         <servlet-name>Logout</servlet-name>
+        <display-name>Logout</display-name>
         <servlet-class>cz.hsrs.servlet.security.LogoutServlet</servlet-class>
     </servlet>
     <servlet>
-        <description>
-        </description>
-        <display-name>ChangeLang</display-name>
         <servlet-name>ChangeLang</servlet-name>
+        <display-name>ChangeLang</display-name>        
         <servlet-class>cz.hsrs.servlet.lang.ChangeLangServlet</servlet-class>
     </servlet>
     
     <servlet>
-        <description>
-        </description>
-        <display-name>ManagementService</display-name>
         <servlet-name>ManagementService</servlet-name>
+        <display-name>ManagementService</display-name>        
         <servlet-class>cz.hsrs.servlet.provider.ManagementService</servlet-class>
     </servlet>
     
+  <servlet>
+      <servlet-name>Jersey REST Service</servlet-name>
+      <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+      <!--<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>-->      
+      <init-param>
+        <param-name>com.sun.jersey.config.property.packages</param-name>
+        <!--<param-name>jersey.config.server.provider.packages</param-name>-->
+        <param-value>cz.hsrs.rest, cz.hsrs.rest.vgi, cz.hsrs.rest.provider</param-value>
+      </init-param>
+      <init-param>
+          <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+          <param-value>true</param-value>
+      </init-param>
+      <init-param>
+          <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+          <param-value>cz.hsrs.rest.util.CorsFilter</param-value>
+      </init-param>
+<!--     <init-param> -->
+<!--       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name> -->
+<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter</param-value> -->
+<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter;cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
+<!--       <param-value>cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
+<!--     </init-param> -->
+      <load-on-startup>1</load-on-startup>
+  </servlet>
+  
+    <servlet-mapping>
+        <servlet-name>FeederServlet</servlet-name>
+        <url-pattern>/FeederServlet</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>Logout</servlet-name>
         <url-pattern>/Logout</url-pattern>
@@ -143,60 +163,17 @@
         <url-pattern>/ManagementService</url-pattern>
     </servlet-mapping>
     
-    <servlet>
+    <servlet-mapping>
       <servlet-name>Jersey REST Service</servlet-name>
-      <!--<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>-->
-      <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-      <init-param>
-        <param-name>com.sun.jersey.config.property.packages</param-name>
-        <!--<param-name>jersey.config.server.provider.packages</param-name>-->
-        <param-value>cz.hsrs.rest, cz.hsrs.rest.vgi</param-value>
-      </init-param>
-      <load-on-startup>1</load-on-startup>
-      <init-param>
-          <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
-          <param-value>true</param-value>
-      </init-param>
-      
-      <init-param>
-          <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-          <param-value>cz.hsrs.rest.util.CorsFilter</param-value>
-      </init-param>
-      
-<!--     <init-param> -->
-<!--       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name> -->
-<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter</param-value> -->
-<!--       <param-value>com.sun.jersey.api.container.filter.LoggingFilter;cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
-<!--       <param-value>cz.hsrs.hsformserver.rest.AuthFilter</param-value> -->
-<!--     </init-param> -->
-  </servlet>
-  
-  <servlet-mapping>
-    <servlet-name>Jersey REST Service</servlet-name>
-    <url-pattern>/rest/*</url-pattern>
-  </servlet-mapping>
-  
-    <init-param>
-        <param-name>development</param-name>
-        <param-value>false</param-value>
-    </init-param>
-
-    <welcome-file-list>
-        <welcome-file>crossroad.jsp</welcome-file>
-    </welcome-file-list>
-
-    <listener>
-        <description>sessionListener</description>
-        <listener-class>cz.hsrs.servlet.security.SessionListener</listener-class>
-    </listener>
-    
-    <listener>
-        <description>servletListener</description>
-        <listener-class>cz.hsrs.rest.SCListener</listener-class>
-    </listener>
+      <url-pattern>/rest/*</url-pattern>
+    </servlet-mapping>
 
     <session-config>
         <session-timeout>240</session-timeout>
     </session-config>
+    
+    <welcome-file-list>
+        <welcome-file>crossroad.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

@@ -199,118 +199,113 @@ public class VgiObservationRestUtil {
         else{
             throw new Exception("Correct ID of device has to be defined!");
         }
-        if(unitId != null) {
-            // check if there is VgiObservation to update
-            VgiObservation oldObs = oUtil.getVgiObservationByObsId(obsId, userId);
-            if(oldObs == null){
-                throw new SQLException("VGI Observation with given ID does not exist!");
-            }
-            else {
-                // check mandatory attributes and the geometry
-                if(lonValue != null && 
-                    latValue != null &&
-                    timestampValue != null &&
-                    catValue != null &&
-                    datasetId != null){
-                    
-                    Date newPosDate = DateUtil.parseTimestamp(timestampValue);
-                    UnitPosition oldPos = unitUt.getPositionByGid(oldObs.getGid());
-                    boolean updatedPos = false;
-                    int insGid;
-                    
-                    Double newLon = Double.parseDouble(lonValue);
-                    Double newLat = Double.parseDouble(latValue);
-                    Double newAlt = (altValue != null && !altValue.isEmpty()) ? Double.parseDouble(altValue) : Double.NaN;
-                    Double newDop = (dopValue != null && !dopValue.isEmpty()) ? Double.parseDouble(dopValue) : Double.NaN;
-                 // same position
-                    if(oldPos.getX() == newLon &&
-                        oldPos.getY() == newLat &&
-                        oldPos.getAlt() == newAlt &&
-                        oldPos.internalGetTimestamp() == newPosDate){
-                        // not necessary to update position
-                        updatedPos = true;
-                        insGid = oldPos.getGid();
-                    } else{
-                        Calendar cal = Calendar.getInstance();
-                        cal.setTime(newPosDate);
-                        int newMonth = cal.get(Calendar.MONTH);
-                        cal.setTime(oldPos.internalGetTimestamp());
-                        int oldMonth = cal.get(Calendar.MONTH);
-                        
-                        if(newMonth != oldMonth){
-                            // delete old one !!!
-                            
-                            //insert new with some equal attributes
-                            int newGid = DatabaseFeedOperation.insertPositionByGid(
-                                    oldPos.getUnit_id(),
-                                    newLat, 
-                                    newLon,
-                                    newAlt,
-                                    newDop,
-                                    newPosDate, 
-                                    Double.NaN, 
-                                    "4326");
-                            insGid = newGid;
-                        }
-                        else{
-                            UnitPosition newPos = new UnitPosition(oldPos.getGid(),
-                                    oldPos.getUnit_id(), 
-                                    newLon,
-                                    newLat,
-                                    newAlt,
-                                    newPosDate,
-                                    newDop,
-                                    Double.NaN,
-                                    "4326"); 
-                            updatedPos = DatabaseFeedOperation.updatePositionByGid(newPos);
-                            insGid = oldPos.getGid();
-                        }
-                    }
-                    // update observation
-                    if(updatedPos){
-                        updated = VgiObservationUtil.updateVgiObs(
-                                obsId,
-                                insGid,
-                                DateUtil.formatSecsTZ.format(newPosDate), 
-                                catValue,
-                                descValue,
-                                attsValue,
-                                unitId,
-                                userId,
-                                datasetId);
-                        if(fileInStream != null){
-                            try{
-                                if(mediaType.startsWith("image/")){
-                                    newMedId = insertImage(fileInStream, obsId, mediaType);
-                                }
-                                else{
-                                    newMedId = insertMedia(obsId, fileInStream, mediaType);
-                                }
-                            } catch(Exception e){
-                                if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
-                                    throw new Exception (e.getMessage());
-                                }
-                            }
-                        }
-                        if(updated){
-                            return new VgiObservation(obsId, newMedId);
-                        }
-                        else{
-                            throw new Exception("VgiObservation cannot be updated!");
-                        }
-                    }
-                    else{
-                        throw new Exception("VgiObservation cannot be updated!");
-                    }
-                }
-                else{
-                    throw new Exception("Mandatory attributes of VGIObservation have to be given!");
-                }
-            }
-        }
-        else{
-            throw new Exception("ID of device has to be defined!");
-        }
+        // check if there is VgiObservation to update
+		VgiObservation oldObs = oUtil.getVgiObservationByObsId(obsId, userId);
+		if(oldObs == null){
+		    throw new SQLException("VGI Observation with given ID does not exist!");
+		}
+		else {
+		    // check mandatory attributes and the geometry
+		    if(lonValue != null && 
+		        latValue != null &&
+		        timestampValue != null &&
+		        catValue != null &&
+		        datasetId != null){
+		        
+		        Date newPosDate = DateUtil.parseTimestamp(timestampValue);
+		        UnitPosition oldPos = unitUt.getPositionByGid(oldObs.getGid());
+		        boolean updatedPos = false;
+		        int insGid;
+		        
+		        Double newLon = Double.parseDouble(lonValue);
+		        Double newLat = Double.parseDouble(latValue);
+		        Double newAlt = (altValue != null && !altValue.isEmpty()) ? Double.parseDouble(altValue) : Double.NaN;
+		        Double newDop = (dopValue != null && !dopValue.isEmpty()) ? Double.parseDouble(dopValue) : Double.NaN;
+		     // same position
+		        if(oldPos.getX() == newLon &&
+		            oldPos.getY() == newLat &&
+		            oldPos.getAlt() == newAlt &&
+		            oldPos.internalGetTimestamp() == newPosDate){
+		            // not necessary to update position
+		            updatedPos = true;
+		            insGid = oldPos.getGid();
+		        } else{
+		            Calendar cal = Calendar.getInstance();
+		            cal.setTime(newPosDate);
+		            int newMonth = cal.get(Calendar.MONTH);
+		            cal.setTime(oldPos.internalGetTimestamp());
+		            int oldMonth = cal.get(Calendar.MONTH);
+		            
+		            if(newMonth != oldMonth){
+		                // delete old one !!!
+		                
+		                //insert new with some equal attributes
+		                int newGid = DatabaseFeedOperation.insertPositionByGid(
+		                        oldPos.getUnit_id(),
+		                        newLat, 
+		                        newLon,
+		                        newAlt,
+		                        newDop,
+		                        newPosDate, 
+		                        Double.NaN, 
+		                        "4326");
+		                insGid = newGid;
+		            }
+		            else{
+		                UnitPosition newPos = new UnitPosition(oldPos.getGid(),
+		                        oldPos.getUnit_id(), 
+		                        newLon,
+		                        newLat,
+		                        newAlt,
+		                        newPosDate,
+		                        newDop,
+		                        Double.NaN,
+		                        "4326"); 
+		                updatedPos = DatabaseFeedOperation.updatePositionByGid(newPos);
+		                insGid = oldPos.getGid();
+		            }
+		        }
+		        // update observation
+		        if(updatedPos){
+		            updated = VgiObservationUtil.updateVgiObs(
+		                    obsId,
+		                    insGid,
+		                    DateUtil.formatSecsTZ.format(newPosDate), 
+		                    catValue,
+		                    descValue,
+		                    attsValue,
+		                    unitId,
+		                    userId,
+		                    datasetId);
+		            if(fileInStream != null){
+		                try{
+		                    if(mediaType.startsWith("image/")){
+		                        newMedId = insertImage(fileInStream, obsId, mediaType);
+		                    }
+		                    else{
+		                        newMedId = insertMedia(obsId, fileInStream, mediaType);
+		                    }
+		                } catch(Exception e){
+		                    if(!e.getMessage().equalsIgnoreCase("Any media was given!")){
+		                        throw new Exception (e.getMessage());
+		                    }
+		                }
+		            }
+		            if(updated){
+		                return new VgiObservation(obsId, newMedId);
+		            }
+		            else{
+		                throw new Exception("VgiObservation cannot be updated!");
+		            }
+		        }
+		        else{
+		            throw new Exception("VgiObservation cannot be updated!");
+		        }
+		    }
+		    else{
+		        throw new Exception("Mandatory attributes of VGIObservation have to be given!");
+		    }
+		}
     }
     
     /**
